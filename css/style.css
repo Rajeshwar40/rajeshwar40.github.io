@@ -1,0 +1,41 @@
+
+body {
+  margin:0;
+  font-family:Rajdhani,sans-serif;
+  background:#000;
+  color:#cbd5f5;
+}
+canvas { position:fixed; inset:0; z-index:-1; }
+header {
+  position:fixed; width:100%; background:rgba(0,0,0,.8); border-bottom:1px solid #0f172a;
+}
+.nav {
+  max-width:1200px; margin:auto; padding:14px;
+  display:flex; justify-content:space-between;
+}
+.logo { color:#22c55e; font-family:Share Tech Mono; }
+nav a { color:#cbd5f5; margin-left:15px; text-decoration:none; }
+
+.hero { min-height:100vh; display:flex; align-items:center; padding-top:80px; }
+.hero-inner {
+  max-width:1200px; margin:auto;
+  display:grid; grid-template-columns:1fr 1fr; gap:40px;
+}
+h1 span { color:#22c55e; }
+.terminal {
+  background:#000; border:1px solid #22c55e; padding:20px;
+  font-family:Share Tech Mono;
+}
+.section { padding:80px 20px; max-width:1000px; margin:auto; }
+.section.dark { background:#020617; }
+.badges span {
+  border:1px solid #22c55e; padding:6px 12px; margin:5px; display:inline-block;
+}
+table { width:100%; border-collapse:collapse; }
+td,th { border:1px solid #0f172a; padding:10px; }
+.btn {
+  padding:10px 18px; border-radius:999px; border:1px solid #22c55e;
+}
+.primary { background:#22c55e; color:#000; }
+.ghost { background:none; color:#22c55e; }
+footer { text-align:center; padding:30px; border-top:1px solid #0f172a; }

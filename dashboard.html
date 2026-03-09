@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Enterprise KPI Command Center</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090f;--bg2:#0c0f1a;--bg3:#111827;--bg4:#1a2235;
+  --border:#1e2d45;--border2:#253550;
+  --cyan:#00e5ff;--green:#00ff9d;--yellow:#ffcc00;--red:#ff3d5a;--purple:#c084fc;--orange:#ff7849;
+  --text:#e2eaf5;--muted:#4a6080;--dim:#2a3a52;
+}
+body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:var(--bg2)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* ── LAYOUT ── */
+.app{display:grid;grid-template-columns:220px 1fr;grid-template-rows:56px 1fr;height:100vh}
+.topbar{grid-column:1/-1;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;gap:16px}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:16px 0;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.main{overflow-y:auto;padding:24px}
+
+/* ── TOPBAR ── */
+.brand{display:flex;align-items:center;gap:10px}
+.brand-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--cyan),#0066ff);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.brand-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:#fff;letter-spacing:2px}
+.brand-sub{font-size:8px;color:var(--cyan);letter-spacing:3px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.date-badge{font-size:9px;color:var(--muted);letter-spacing:1px}
+.pulse-wrap{display:flex;align-items:center;gap:6px}
+.pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulseGlow 1.4s ease-in-out infinite}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 0 0 #00ff9d66}50%{box-shadow:0 0 0 5px #00ff9d00}}
+.pulse-txt{font-size:9px;color:var(--green);letter-spacing:2px}
+.btn{border:none;border-radius:6px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;padding:6px 14px;transition:all 0.2s}
+.btn-primary{background:var(--cyan);color:#000;font-weight:700}
+.btn-primary:hover{background:#00f0ff;transform:translateY(-1px)}
+.btn-ghost{background:var(--border);color:var(--text)}
+.btn-ghost:hover{background:var(--border2)}
+.btn-danger{background:#ff3d5a22;border:1px solid #ff3d5a44;color:var(--red)}
+.btn-danger:hover{background:#ff3d5a33}
+.btn-success{background:#00ff9d22;border:1px solid #00ff9d44;color:var(--green)}
+.btn-sm{padding:4px 10px;font-size:9px}
+
+/* ── SIDEBAR ── */
+.nav-section{padding:6px 14px 4px;font-size:8px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-top:8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 16px;cursor:pointer;font-size:11px;color:var(--muted);transition:all 0.15s;border-left:2px solid transparent;margin:0 8px;border-radius:0 6px 6px 0}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:var(--bg3);color:var(--cyan);border-left-color:var(--cyan)}
+.nav-item .icon{font-size:14px;width:20px;text-align:center}
+.nav-badge{margin-left:auto;background:var(--cyan);color:#000;font-size:8px;padding:1px 6px;border-radius:10px;font-weight:700}
+.nav-badge.red{background:var(--red);color:#fff}
+.nav-badge.yellow{background:var(--yellow);color:#000}
+
+/* ── PAGE HEADER ── */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.page-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff}
+.page-sub{font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:2px}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px}
+.card-sm{padding:16px}
+.card-title{font-size:9px;color:var(--cyan);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px}
+
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.mb16{margin-bottom:16px}
+.mb20{margin-bottom:20px}
+.mb24{margin-bottom:24px}
+
+/* ── KPI CARD ── */
+.kpi-card{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:12px;padding:18px;position:relative;overflow:hidden;transition:border-color 0.2s}
+.kpi-card:hover{border-color:var(--border2)}
+.kpi-accent{position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 12px 0 60px;opacity:0.07}
+.kpi-name{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.kpi-val{font-size:26px;font-weight:700;color:#fff;margin-bottom:4px;font-family:'Syne',sans-serif}
+.kpi-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.kpi-target{font-size:9px;color:var(--dim)}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:1px}
+.badge-green{background:#00ff9d18;color:var(--green);border:1px solid #00ff9d33}
+.badge-yellow{background:#ffcc0018;color:var(--yellow);border:1px solid #ffcc0033}
+.badge-red{background:#ff3d5a18;color:var(--red);border:1px solid #ff3d5a33}
+.badge-blue{background:#00e5ff18;color:var(--cyan);border:1px solid #00e5ff33}
+.badge-purple{background:#c084fc18;color:var(--purple);border:1px solid #c084fc33}
+.kpi-progress-wrap{background:var(--bg3);border-radius:4px;height:5px;overflow:hidden}
+.kpi-progress-fill{height:100%;border-radius:4px;transition:width 0.8s ease}
+.kpi-actions{display:flex;gap:6px;margin-top:10px;opacity:0;transition:opacity 0.2s}
+.kpi-card:hover .kpi-actions{opacity:1}
+.kpi-delta{font-size:10px;margin-top:4px}
+
+/* ── TASK CARD ── */
+.task-item{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px;transition:all 0.2s;cursor:pointer}
+.task-item:hover{border-color:var(--border2);transform:translateX(2px)}
+.task-check{width:18px;height:18px;border-radius:4px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all 0.2s;cursor:pointer}
+.task-check.done{background:var(--green);border-color:var(--green);color:#000;font-size:11px}
+.task-check.in-progress{background:var(--yellow);border-color:var(--yellow);color:#000;font-size:9px}
+.task-body{flex:1;min-width:0}
+.task-title{font-size:12px;color:var(--text);font-weight:600;margin-bottom:3px}
+.task-title.done{text-decoration:line-through;color:var(--muted)}
+.task-desc{font-size:10px;color:var(--muted);margin-bottom:6px;line-height:1.5}
+.task-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.task-tag{font-size:8px;padding:2px 7px;border-radius:3px;letter-spacing:1px}
+.task-due{font-size:9px;color:var(--muted)}
+.task-due.overdue{color:var(--red)}
+.task-actions{display:flex;gap:4px;flex-shrink:0;opacity:0;transition:opacity 0.2s}
+.task-item:hover .task-actions{opacity:1}
+.icon-btn{background:none;border:1px solid var(--border);border-radius:5px;color:var(--muted);cursor:pointer;padding:4px 7px;font-size:11px;transition:all 0.15s}
+.icon-btn:hover{border-color:var(--border2);color:var(--text)}
+.icon-btn.del:hover{border-color:var(--red);color:var(--red)}
+
+/* ── PROGRESS BAR ── */
+.prog-wrap{background:var(--bg3);border-radius:6px;height:8px;overflow:hidden;margin-bottom:4px}
+.prog-fill{height:100%;border-radius:6px;transition:width 0.8s ease}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:#000a;backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:28px;width:520px;max-width:95vw;transform:translateY(20px);transition:transform 0.2s;max-height:85vh;overflow-y:auto}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:#fff;margin-bottom:20px}
+.form-group{margin-bottom:14px}
+.form-label{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;display:block}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;transition:border-color 0.2s}
+.form-input:focus{border-color:var(--cyan)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+select.form-input option{background:var(--bg3)}
+
+/* ── STAT OVERVIEW ── */
+.stat-num{font-family:'Syne',sans-serif;font-size:32px;font-weight:800}
+.stat-lbl{font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:4px;text-transform:uppercase}
+
+/* ── KANBAN ── */
+.kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.kanban-col{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px}
+.kanban-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.kanban-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700}
+.kanban-count{font-size:10px;color:var(--muted)}
+.kanban-item{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;transition:all 0.15s}
+.kanban-item:hover{border-color:var(--border2);transform:translateY(-1px)}
+.kanban-item-title{font-size:11px;color:var(--text);font-weight:600;margin-bottom:5px}
+.kanban-item-kpi{font-size:9px;color:var(--muted);margin-bottom:6px}
+
+/* ── PROGRESS PAGE ── */
+.progress-section{margin-bottom:24px}
+.progress-label{display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px}
+.timeline{position:relative;padding-left:28px}
+.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:1px;background:var(--border)}
+.timeline-item{position:relative;margin-bottom:16px}
+.timeline-dot{position:absolute;left:-24px;top:4px;width:10px;height:10px;border-radius:50%;border:2px solid var(--border2);background:var(--bg)}
+.timeline-dot.done{background:var(--green);border-color:var(--green)}
+.timeline-dot.active{background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+.timeline-dot.pending{background:var(--bg3);border-color:var(--border)}
+.timeline-content{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.timeline-title{font-size:11px;color:var(--text);font-weight:600;margin-bottom:3px}
+.timeline-meta{font-size:9px;color:var(--muted)}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty-icon{font-size:36px;margin-bottom:12px}
+.empty-text{font-size:12px;margin-bottom:4px;color:var(--text)}
+.empty-sub{font-size:10px}
+
+/* ── CHART ── */
+canvas{display:block;width:100%!important}
+
+/* ── TABS ── */
+.tab-bar{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px}
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);padding:8px 18px;cursor:pointer;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;transition:all 0.2s;margin-bottom:-1px}
+.tab-btn.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+.tab-btn:hover:not(.active){color:var(--text)}
+
+/* ── SECTION ── */
+.page{display:none}.page.active{display:block}
+
+/* ── NOTIFICATION ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 18px;font-size:11px;color:var(--text);transform:translateY(80px);opacity:0;transition:all 0.3s;z-index:2000;max-width:300px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid var(--red)}
+
+/* ── TOOLTIP ── */
+.tooltip{position:relative}
+.tooltip:hover::after{content:attr(data-tip);position:absolute;bottom:120%;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--border2);padding:4px 8px;border-radius:5px;font-size:9px;white-space:nowrap;pointer-events:none;z-index:100}
+
+/* ── RESPONSIVE CANVAS ── */
+.chart-wrap{position:relative;height:200px}
+.chart-wrap canvas{position:absolute;inset:0}
+
+/* ANIMATIONS */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn 0.3s ease forwards}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <div>
+        <div class="brand-name">COMMAND CENTER</div>
+        <div class="brand-sub">ENTERPRISE KPI PLATFORM</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex:1;max-width:360px;margin:0 24px">
+      <input id="searchBox" class="form-input" placeholder="🔍  Search KPIs, tasks..." style="margin:0;font-size:11px" oninput="handleSearch(this.value)"/>
+    </div>
+    <div class="topbar-right">
+      <div class="date-badge" id="dateBadge"></div>
+      <div class="pulse-wrap"><div class="pulse-dot"></div><span class="pulse-txt">LIVE</span></div>
+      <button class="btn btn-primary" onclick="openModal('kpi')">+ KPI</button>
+      <button class="btn btn-ghost" onclick="openModal('task')">+ Task</button>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div style="padding:12px 16px 6px">
+      <div style="font-size:9px;color:var(--muted);letter-spacing:2px">WORKSPACE</div>
+      <div style="font-size:11px;color:var(--text);margin-top:2px" id="workspaceName">My Enterprise</div>
+    </div>
+    <div class="nav-section">Navigation</div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">📊</span>Dashboard<span class="nav-badge" id="badge-kpis">0</span></div>
+    <div class="nav-item" onclick="showPage('kpis',this)"><span class="icon">🎯</span>My KPIs</div>
+    <div class="nav-item" onclick="showPage('tasks',this)"><span class="icon">✅</span>Tasks<span class="nav-badge yellow" id="badge-tasks">0</span></div>
+    <div class="nav-item" onclick="showPage('kanban',this)"><span class="icon">🗂</span>Kanban Board</div>
+    <div class="nav-item" onclick="showPage('progress',this)"><span class="icon">📈</span>Progress</div>
+    <div class="nav-section">Reports</div>
+    <div class="nav-item" onclick="showPage('analytics',this)"><span class="icon">📉</span>Analytics</div>
+    <div class="nav-section">Settings</div>
+    <div class="nav-item" onclick="openWorkspaceModal()"><span class="icon">⚙️</span>Workspace</div>
+    <div class="nav-item" onclick="exportData()"><span class="icon">💾</span>Export Data</div>
+    <div style="margin-top:auto;padding:16px;border-top:1px solid var(--border);margin-top:16px">
+      <div style="font-size:9px;color:var(--muted)">Total KPIs: <span style="color:var(--cyan)" id="sideKpis">0</span></div>
+      <div style="font-size:9px;color:var(--muted);margin-top:4px">Open Tasks: <span style="color:var(--yellow)" id="sideTasks">0</span></div>
+      <div style="font-size:9px;color:var(--muted);margin-top:4px">Completed: <span style="color:var(--green)" id="sideDone">0</span></div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main" id="mainContent">
+
+    <!-- DASHBOARD PAGE -->
+    <div id="page-dashboard" class="page active">
+      <div class="page-header">
+        <div><div class="page-title">Dashboard</div><div class="page-sub">OVERVIEW · REAL-TIME</div></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="openModal('kpi')">+ Add KPI</button>
+          <button class="btn btn-primary btn-sm" onclick="openModal('task')">+ Add Task</button>
+        </div>
+      </div>
+      <!-- Summary Stats -->
+      <div class="g4 mb20" id="summaryStats"></div>
+      <!-- KPI Overview -->
+      <div class="card mb20">
+        <div class="card-title">KPI Overview</div>
+        <div id="dashKpiGrid" class="g3"></div>
+      </div>
+      <!-- Charts + Tasks -->
+      <div class="g2">
+        <div class="card">
+          <div class="card-title">Progress Chart</div>
+          <canvas id="dashChart" height="180"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-title">Recent Tasks</div>
+          <div id="dashTasks"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPIs PAGE -->
+    <div id="page-kpis" class="page">
+      <div class="page-header">
+        <div><div class="page-title">My KPIs</div><div class="page-sub">CUSTOM INDICATORS</div></div>
+        <button class="btn btn-primary" onclick="openModal('kpi')">+ Create KPI</button>
+      </div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="filterKPIs('all',this)">All</button>
+        <button class="tab-btn" onclick="filterKPIs('on-track',this)">On Track</button>
+        <button class="tab-btn" onclick="filterKPIs('at-risk',this)">At Risk</button>
+        <button class="tab-btn" onclick="filterKPIs('behind',this)">Behind</button>
+      </div>
+      <div id="kpiPageGrid" class="g3"></div>
+    </div>
+
+    <!-- TASKS PAGE -->
+    <div id="page-tasks" class="page">
+      <div class="page-header">
+        <div><div class="page-title">Tasks</div><div class="page-sub">WORK MANAGEMENT</div></div>
+        <button class="btn btn-primary" onclick="openModal('task')">+ Add Task</button>
+      </div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="filterTasks('all',this)">All</button>
+        <button class="tab-btn" onclick="filterTasks('todo',this)">To Do</button>
+        <button class="tab-btn" onclick="filterTasks('in-progress',this)">In Progress</button>
+        <button class="tab-btn" onclick="filterTasks('scheduled',this)">Scheduled</button>
+        <button class="tab-btn" onclick="filterTasks('done',this)">Done</button>
+      </div>
+      <div id="taskList"></div>
+    </div>
+
+    <!-- KANBAN PAGE -->
+    <div id="page-kanban" class="page">
+      <div class="page-header">
+        <div><div class="page-title">Kanban Board</div><div class="page-sub">WORK PIPELINE</div></div>
+        <button class="btn btn-primary" onclick="openModal('task')">+ Add Task</button>
+      </div>
+      <div class="kanban" id="kanbanBoard"></div>
+    </div>
+
+    <!-- PROGRESS PAGE -->
+    <div id="page-progress" class="page">
+      <div class="page-header">
+        <div><div class="page-title">Progress</div><div class="page-sub">MILESTONES & COMPLETION</div></div>
+      </div>
+      <div class="g2 mb20">
+        <div class="card">
+          <div class="card-title">Overall KPI Progress</div>
+          <div id="kpiProgress"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Task Completion Timeline</div>
+          <div class="timeline" id="progressTimeline"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Work Status Summary</div>
+        <canvas id="progressChart" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- ANALYTICS PAGE -->
+    <div id="page-analytics" class="page">
+      <div class="page-header">
+        <div><div class="page-title">Analytics</div><div class="page-sub">PERFORMANCE INSIGHTS</div></div>
+      </div>
+      <div class="g3 mb20" id="analyticsStats"></div>
+      <div class="g2 mb20">
+        <div class="card">
+          <div class="card-title">KPI Performance by Category</div>
+          <canvas id="categoryChart" height="200"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-title">Task Velocity (Weekly)</div>
+          <canvas id="velocityChart" height="200"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">KPI Health Matrix</div>
+        <div id="healthMatrix"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- KPI MODAL -->
+<div class="modal-overlay" id="kpiModal">
+  <div class="modal">
+    <div class="modal-title" id="kpiModalTitle">Create KPI</div>
+    <div class="form-group">
+      <label class="form-label">KPI Name *</label>
+      <input class="form-input" id="kpiName" placeholder="e.g. Critical Vulnerability SLA"/>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-input" id="kpiCategory">
+          <option>Security</option><option>Performance</option><option>Compliance</option>
+          <option>Quality</option><option>Operations</option><option>Business</option><option>Custom</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Unit</label>
+        <select class="form-input" id="kpiUnit">
+          <option>%</option><option>hours</option><option>days</option><option>count</option>
+          <option>score</option><option>$</option><option>custom</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Current Value *</label>
+        <input class="form-input" id="kpiCurrent" type="number" placeholder="e.g. 87"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Target Value *</label>
+        <input class="form-input" id="kpiTarget" type="number" placeholder="e.g. 100"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Direction</label>
+        <select class="form-input" id="kpiDirection">
+          <option value="higher">Higher is better</option>
+          <option value="lower">Lower is better</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Priority</label>
+        <select class="form-input" id="kpiPriority">
+          <option>High</option><option>Medium</option><option>Low</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input class="form-input" id="kpiDesc" placeholder="What this KPI measures..."/>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('kpi')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveKPI()">Save KPI</button>
+    </div>
+  </div>
+</div>
+
+<!-- TASK MODAL -->
+<div class="modal-overlay" id="taskModal">
+  <div class="modal">
+    <div class="modal-title" id="taskModalTitle">Add Task</div>
+    <div class="form-group">
+      <label class="form-label">Task Title *</label>
+      <input class="form-input" id="taskTitle" placeholder="e.g. Run nuclei scan on staging"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-input" id="taskDesc" rows="2" placeholder="Details about this task..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-input" id="taskStatus">
+          <option value="todo">To Do</option>
+          <option value="in-progress">In Progress</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="done">Done</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Priority</label>
+        <select class="form-input" id="taskPriority">
+          <option>Critical</option><option>High</option><option>Medium</option><option>Low</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Due Date</label>
+        <input class="form-input" id="taskDue" type="date"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Link to KPI</label>
+        <select class="form-input" id="taskKpi">
+          <option value="">None</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Assigned To</label>
+        <input class="form-input" id="taskAssignee" placeholder="e.g. John Doe"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category Tag</label>
+        <input class="form-input" id="taskTag" placeholder="e.g. Security"/>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('task')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- UPDATE KPI MODAL -->
+<div class="modal-overlay" id="updateKpiModal">
+  <div class="modal">
+    <div class="modal-title">Update KPI Progress</div>
+    <input type="hidden" id="updateKpiId"/>
+    <div class="form-group">
+      <label class="form-label">New Current Value</label>
+      <input class="form-input" id="updateKpiValue" type="number"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Update Note</label>
+      <input class="form-input" id="updateKpiNote" placeholder="What changed?"/>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('updateKpi')">Cancel</button>
+      <button class="btn btn-primary" onclick="doUpdateKpi()">Update</button>
+    </div>
+  </div>
+</div>
+
+<!-- WORKSPACE MODAL -->
+<div class="modal-overlay" id="workspaceModal">
+  <div class="modal">
+    <div class="modal-title">Workspace Settings</div>
+    <div class="form-group">
+      <label class="form-label">Workspace Name</label>
+      <input class="form-input" id="wsName" placeholder="My Enterprise"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Organization</label>
+      <input class="form-input" id="wsOrg" placeholder="Acme Corp"/>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('workspace')">Cancel</button>
+      <button class="btn btn-danger btn-sm" onclick="clearAllData()" style="margin-right:auto">Reset All Data</button>
+      <button class="btn btn-primary" onclick="saveWorkspace()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ────────────────────────────────────────────────────────────────────
+let STATE = {
+  kpis: [],
+  tasks: [],
+  workspace: { name: 'My Enterprise', org: '' },
+  editKpiId: null,
+  editTaskId: null,
+  kpiFilter: 'all',
+  taskFilter: 'all',
+};
+
+// ── PERSISTENCE ───────────────────────────────────────────────────────────────
+function save() {
+  try { localStorage.setItem('enterprise_kpi_v2', JSON.stringify(STATE)); } catch(e) {}
+}
+function load() {
+  try {
+    const d = localStorage.getItem('enterprise_kpi_v2');
+    if(d) { const p = JSON.parse(d); STATE.kpis = p.kpis||[]; STATE.tasks = p.tasks||[]; STATE.workspace = p.workspace||STATE.workspace; }
+  } catch(e) {}
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function toast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+function fmt(d) { return d ? new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) : ''; }
+function isOverdue(d) { return d && new Date(d) < new Date() && true; }
+
+function kpiStatus(kpi) {
+  const pct = kpi.direction === 'lower'
+    ? Math.min(100, (kpi.target / kpi.current) * 100)
+    : Math.min(100, (kpi.current / kpi.target) * 100);
+  if(pct >= 90) return 'on-track';
+  if(pct >= 60) return 'at-risk';
+  return 'behind';
+}
+function kpiPct(kpi) {
+  return kpi.direction === 'lower'
+    ? Math.min(100, Math.round((kpi.target / kpi.current) * 100))
+    : Math.min(100, Math.round((kpi.current / kpi.target) * 100));
+}
+// Hex color constants — used in both DOM and Canvas (no CSS vars in canvas)
+const HEX = { cyan:'#00e5ff', green:'#00ff9d', yellow:'#ffcc00', red:'#ff3d5a', purple:'#c084fc', orange:'#ff7849', muted:'#4a6080', bg:'#07090f', bg2:'#0c0f1a', bg3:'#111827' };
+function statusColor(s) { return s==='on-track'?HEX.green:s==='at-risk'?HEX.yellow:HEX.red; }
+function statusBadge(s) { return s==='on-track'?'badge-green':s==='at-risk'?'badge-yellow':'badge-red'; }
+function priorityColor(p) { return p==='Critical'?HEX.red:p==='High'?HEX.orange:p==='Medium'?HEX.yellow:HEX.muted; }
+function taskStatusIcon(s) { return s==='done'?'✓':s==='in-progress'?'▶':s==='scheduled'?'⏰':''; }
+function taskStatusColor(s) { return s==='done'?HEX.green:s==='in-progress'?HEX.cyan:s==='scheduled'?HEX.purple:HEX.muted; }
+
+// ── NAV ───────────────────────────────────────────────────────────────────────
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  el.classList.add('active');
+  renderPage(name);
+}
+
+function renderPage(name) {
+  if(name==='dashboard') renderDashboard();
+  else if(name==='kpis') renderKPIs();
+  else if(name==='tasks') renderTasks();
+  else if(name==='kanban') renderKanban();
+  else if(name==='progress') renderProgress();
+  else if(name==='analytics') renderAnalytics();
+}
+
+// ── SIDEBAR BADGES ────────────────────────────────────────────────────────────
+function updateBadges() {
+  const open = STATE.tasks.filter(t=>t.status!=='done').length;
+  const done = STATE.tasks.filter(t=>t.status==='done').length;
+  document.getElementById('badge-kpis').textContent = STATE.kpis.length;
+  document.getElementById('badge-tasks').textContent = open;
+  document.getElementById('sideKpis').textContent = STATE.kpis.length;
+  document.getElementById('sideTasks').textContent = open;
+  document.getElementById('sideDone').textContent = done;
+}
+
+// ── MODALS ────────────────────────────────────────────────────────────────────
+function openModal(type) {
+  if(type==='kpi') {
+    STATE.editKpiId = null;
+    document.getElementById('kpiModalTitle').textContent = 'Create KPI';
+    ['kpiName','kpiCurrent','kpiTarget','kpiDesc'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('kpiModal').classList.add('open');
+  } else if(type==='task') {
+    STATE.editTaskId = null;
+    document.getElementById('taskModalTitle').textContent = 'Add Task';
+    ['taskTitle','taskDesc','taskAssignee','taskTag'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('taskDue').value='';
+    document.getElementById('taskStatus').value='todo';
+    document.getElementById('taskPriority').value='Medium';
+    // populate KPI select
+    const sel = document.getElementById('taskKpi');
+    sel.innerHTML = '<option value="">None</option>' + STATE.kpis.map(k=>`<option value="${k.id}">${k.name}</option>`).join('');
+    document.getElementById('taskModal').classList.add('open');
+  } else if(type==='updateKpi') {
+    document.getElementById('updateKpiModal').classList.add('open');
+  } else if(type==='workspace') {
+    document.getElementById('wsName').value = STATE.workspace.name;
+    document.getElementById('wsOrg').value = STATE.workspace.org||'';
+    document.getElementById('workspaceModal').classList.add('open');
+  }
+}
+function closeModal(type) {
+  const map={kpi:'kpiModal',task:'taskModal',updateKpi:'updateKpiModal',workspace:'workspaceModal'};
+  document.getElementById(map[type]).classList.remove('open');
+}
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
+function openWorkspaceModal(){openModal('workspace');}
+
+// ── KPI CRUD ──────────────────────────────────────────────────────────────────
+function saveKPI() {
+  const name = document.getElementById('kpiName').value.trim();
+  const current = parseFloat(document.getElementById('kpiCurrent').value);
+  const target = parseFloat(document.getElementById('kpiTarget').value);
+  if(!name || isNaN(current) || isNaN(target)) { toast('Fill in required fields','error'); return; }
+  const kpi = {
+    id: STATE.editKpiId || uid(),
+    name, current, target,
+    category: document.getElementById('kpiCategory').value,
+    unit: document.getElementById('kpiUnit').value,
+    direction: document.getElementById('kpiDirection').value,
+    priority: document.getElementById('kpiPriority').value,
+    desc: document.getElementById('kpiDesc').value,
+    history: [{value:current, date:new Date().toISOString(), note:'Initial'}],
+    createdAt: STATE.editKpiId ? (STATE.kpis.find(k=>k.id===STATE.editKpiId)?.createdAt || new Date().toISOString()) : new Date().toISOString(),
+  };
+  if(STATE.editKpiId) {
+    const idx = STATE.kpis.findIndex(k=>k.id===STATE.editKpiId);
+    kpi.history = STATE.kpis[idx].history || kpi.history;
+    STATE.kpis[idx] = kpi;
+    toast('KPI updated ✓');
+  } else {
+    STATE.kpis.push(kpi);
+    toast('KPI created ✓');
+  }
+  save(); closeModal('kpi'); refreshAll();
+}
+
+function editKPI(id) {
+  const k = STATE.kpis.find(kk=>kk.id===id); if(!k) return;
+  STATE.editKpiId = id;
+  document.getElementById('kpiModalTitle').textContent = 'Edit KPI';
+  document.getElementById('kpiName').value = k.name;
+  document.getElementById('kpiCurrent').value = k.current;
+  document.getElementById('kpiTarget').value = k.target;
+  document.getElementById('kpiCategory').value = k.category;
+  document.getElementById('kpiUnit').value = k.unit;
+  document.getElementById('kpiDirection').value = k.direction;
+  document.getElementById('kpiPriority').value = k.priority;
+  document.getElementById('kpiDesc').value = k.desc||'';
+  document.getElementById('kpiModal').classList.add('open');
+}
+
+function deleteKPI(id) {
+  if(!confirm('Delete this KPI?')) return;
+  STATE.kpis = STATE.kpis.filter(k=>k.id!==id);
+  STATE.tasks.forEach(t=>{ if(t.kpiId===id) t.kpiId=''; });
+  save(); refreshAll(); toast('KPI deleted');
+}
+
+function openUpdateKpi(id) {
+  const k = STATE.kpis.find(kk=>kk.id===id); if(!k) return;
+  document.getElementById('updateKpiId').value = id;
+  document.getElementById('updateKpiValue').value = k.current;
+  document.getElementById('updateKpiNote').value = '';
+  openModal('updateKpi');
+}
+
+function doUpdateKpi() {
+  const id = document.getElementById('updateKpiId').value;
+  const val = parseFloat(document.getElementById('updateKpiValue').value);
+  const note = document.getElementById('updateKpiNote').value;
+  if(isNaN(val)) { toast('Enter a valid value','error'); return; }
+  const k = STATE.kpis.find(kk=>kk.id===id); if(!k) return;
+  k.current = val;
+  k.history = k.history || [];
+  k.history.push({value:val, date:new Date().toISOString(), note});
+  save(); closeModal('updateKpi'); refreshAll(); toast('KPI updated ✓');
+}
+
+// ── TASK CRUD ─────────────────────────────────────────────────────────────────
+function saveTask() {
+  const title = document.getElementById('taskTitle').value.trim();
+  if(!title) { toast('Task title required','error'); return; }
+  const task = {
+    id: STATE.editTaskId || uid(),
+    title,
+    desc: document.getElementById('taskDesc').value,
+    status: document.getElementById('taskStatus').value,
+    priority: document.getElementById('taskPriority').value,
+    due: document.getElementById('taskDue').value,
+    kpiId: document.getElementById('taskKpi').value,
+    assignee: document.getElementById('taskAssignee').value,
+    tag: document.getElementById('taskTag').value,
+    createdAt: STATE.editTaskId ? (STATE.tasks.find(t=>t.id===STATE.editTaskId)?.createdAt||new Date().toISOString()) : new Date().toISOString(),
+    completedAt: null,
+  };
+  if(STATE.editTaskId) {
+    const idx = STATE.tasks.findIndex(t=>t.id===STATE.editTaskId);
+    if(task.status==='done' && STATE.tasks[idx].status!=='done') task.completedAt = new Date().toISOString();
+    else task.completedAt = STATE.tasks[idx].completedAt;
+    STATE.tasks[idx] = task;
+    toast('Task updated ✓');
+  } else {
+    STATE.tasks.push(task);
+    toast('Task added ✓');
+  }
+  save(); closeModal('task'); refreshAll();
+}
+
+function editTask(id) {
+  const t = STATE.tasks.find(tt=>tt.id===id); if(!t) return;
+  STATE.editTaskId = id;
+  document.getElementById('taskModalTitle').textContent = 'Edit Task';
+  document.getElementById('taskTitle').value = t.title;
+  document.getElementById('taskDesc').value = t.desc||'';
+  document.getElementById('taskStatus').value = t.status;
+  document.getElementById('taskPriority').value = t.priority;
+  document.getElementById('taskDue').value = t.due||'';
+  document.getElementById('taskAssignee').value = t.assignee||'';
+  document.getElementById('taskTag').value = t.tag||'';
+  const sel = document.getElementById('taskKpi');
+  sel.innerHTML = '<option value="">None</option>' + STATE.kpis.map(k=>`<option value="${k.id}">${k.name}</option>`).join('');
+  sel.value = t.kpiId||'';
+  document.getElementById('taskModal').classList.add('open');
+}
+
+function deleteTask(id) {
+  if(!confirm('Delete this task?')) return;
+  STATE.tasks = STATE.tasks.filter(t=>t.id!==id);
+  save(); refreshAll(); toast('Task deleted');
+}
+
+function toggleTaskDone(id) {
+  const t = STATE.tasks.find(tt=>tt.id===id); if(!t) return;
+  t.status = t.status==='done' ? 'todo' : 'done';
+  if(t.status==='done') t.completedAt = new Date().toISOString();
+  save(); refreshAll();
+}
+
+// ── KPI CARD HTML ─────────────────────────────────────────────────────────────
+function kpiCardHTML(k) {
+  const pct = kpiPct(k);
+  const st = kpiStatus(k);
+  const col = statusColor(st);
+  const stLabel = st==='on-track'?'ON TRACK':st==='at-risk'?'AT RISK':'BEHIND';
+  return `<div class="kpi-card fade-in">
+    <div class="kpi-accent" style="background:${col}"></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+      <div class="kpi-name">${k.name}</div>
+      <span class="badge ${statusBadge(st)}">${stLabel}</span>
+    </div>
+    <div class="kpi-val">${k.current}<span style="font-size:14px;color:var(--muted)">${k.unit}</span></div>
+    <div class="kpi-meta">
+      <span class="kpi-target">Target: ${k.target}${k.unit}</span>
+      <span style="font-size:10px;color:${col};font-weight:700">${pct}%</span>
+    </div>
+    <div class="kpi-progress-wrap">
+      <div class="kpi-progress-fill" style="width:${pct}%;background:linear-gradient(90deg,${col}88,${col})"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px">
+      <span style="font-size:9px;color:var(--muted)">${k.category} · ${k.priority}</span>
+      <span style="font-size:9px;color:var(--muted)">${k.direction==='lower'?'↓ lower better':'↑ higher better'}</span>
+    </div>
+    ${k.desc?`<div style="font-size:9px;color:var(--muted);margin-top:6px;line-height:1.5">${k.desc}</div>`:''}
+    <div class="kpi-actions">
+      <button class="btn btn-success btn-sm" onclick="openUpdateKpi('${k.id}')">↑ Update</button>
+      <button class="btn btn-ghost btn-sm" onclick="editKPI('${k.id}')">Edit</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteKPI('${k.id}')">✕</button>
+    </div>
+  </div>`;
+}
+
+// ── TASK ITEM HTML ────────────────────────────────────────────────────────────
+function taskItemHTML(t) {
+  const linked = t.kpiId ? STATE.kpis.find(k=>k.id===t.kpiId) : null;
+  const over = t.status!=='done' && isOverdue(t.due);
+  const statusColors = {todo:HEX.muted,'in-progress':HEX.cyan,scheduled:HEX.purple,done:HEX.green};
+  const statusLabels = {todo:'TODO','in-progress':'IN PROGRESS',scheduled:'SCHEDULED',done:'DONE'};
+  return `<div class="task-item fade-in">
+    <div class="task-check ${t.status}" onclick="toggleTaskDone('${t.id}')" title="Toggle done">
+      ${taskStatusIcon(t.status)}
+    </div>
+    <div class="task-body">
+      <div class="task-title ${t.status==='done'?'done':''}">${t.title}</div>
+      ${t.desc?`<div class="task-desc">${t.desc}</div>`:''}
+      <div class="task-meta">
+        <span class="badge" style="background:${statusColors[t.status]}22;color:${statusColors[t.status]};border:1px solid ${statusColors[t.status]}44;font-size:8px">${statusLabels[t.status]}</span>
+        <span style="font-size:9px;color:${priorityColor(t.priority)}">${t.priority}</span>
+        ${t.tag?`<span class="task-tag" style="background:var(--bg3);color:var(--muted);border:1px solid var(--border)">${t.tag}</span>`:''}
+        ${linked?`<span style="font-size:9px;color:var(--cyan)">🎯 ${linked.name}</span>`:''}
+        ${t.assignee?`<span style="font-size:9px;color:var(--muted)">👤 ${t.assignee}</span>`:''}
+        ${t.due?`<span class="task-due ${over?'overdue':''}">📅 ${fmt(t.due)}${over?' OVERDUE':''}</span>`:''}
+      </div>
+    </div>
+    <div class="task-actions">
+      <button class="icon-btn" onclick="editTask('${t.id}')" title="Edit">✎</button>
+      <button class="icon-btn del" onclick="deleteTask('${t.id}')" title="Delete">✕</button>
+    </div>
+  </div>`;
+}
+
+// ── RENDER DASHBOARD ──────────────────────────────────────────────────────────
+function renderDashboard() {
+  const total = STATE.kpis.length;
+  const onTrack = STATE.kpis.filter(k=>kpiStatus(k)==='on-track').length;
+  const totalTasks = STATE.tasks.length;
+  const done = STATE.tasks.filter(t=>t.status==='done').length;
+  const inProg = STATE.tasks.filter(t=>t.status==='in-progress').length;
+  const overdue = STATE.tasks.filter(t=>t.status!=='done'&&isOverdue(t.due)).length;
+
+  document.getElementById('summaryStats').innerHTML = [
+    [`Total KPIs`,total,HEX.cyan,'📊'],
+    [`On Track`,onTrack,HEX.green,'✅'],
+    [`Tasks Done`,done,HEX.purple,'🏁'],
+    [`Overdue`,overdue,HEX.red,'⚠️'],
+  ].map(([l,v,c,ic])=>`<div class="card" style="text-align:center">
+    <div style="font-size:24px;margin-bottom:4px">${ic}</div>
+    <div class="stat-num" style="color:${c}">${v}</div>
+    <div class="stat-lbl">${l}</div>
+  </div>`).join('');
+
+  const dashKpis = STATE.kpis.slice(0,6);
+  document.getElementById('dashKpiGrid').innerHTML = dashKpis.length
+    ? dashKpis.map(kpiCardHTML).join('')
+    : `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🎯</div><div class="empty-text">No KPIs yet</div><div class="empty-sub">Click "+ KPI" to create your first KPI</div></div>`;
+
+  const recent = STATE.tasks.filter(t=>t.status!=='done').slice(0,5);
+  document.getElementById('dashTasks').innerHTML = recent.length
+    ? recent.map(taskItemHTML).join('')
+    : `<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">No open tasks</div><div class="empty-sub">Click "+ Task" to add one</div></div>`;
+
+  drawDashChart();
+}
+
+// ── RENDER KPIs PAGE ──────────────────────────────────────────────────────────
+function renderKPIs() {
+  let filtered = STATE.kpis;
+  if(STATE.kpiFilter !== 'all') filtered = filtered.filter(k=>kpiStatus(k)===STATE.kpiFilter);
+  document.getElementById('kpiPageGrid').innerHTML = filtered.length
+    ? filtered.map(kpiCardHTML).join('')
+    : `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🎯</div><div class="empty-text">No KPIs ${STATE.kpiFilter!=='all'?'in this category':''}</div><div class="empty-sub">Create your first custom KPI</div></div>`;
+}
+
+function filterKPIs(f, el) {
+  STATE.kpiFilter = f;
+  document.querySelectorAll('#page-kpis .tab-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderKPIs();
+}
+
+// ── RENDER TASKS PAGE ─────────────────────────────────────────────────────────
+function renderTasks() {
+  let filtered = STATE.tasks;
+  if(STATE.taskFilter !== 'all') filtered = filtered.filter(t=>t.status===STATE.taskFilter);
+  document.getElementById('taskList').innerHTML = filtered.length
+    ? filtered.map(taskItemHTML).join('')
+    : `<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">No tasks ${STATE.taskFilter!=='all'?'with this status':''}</div><div class="empty-sub">Add your first task</div></div>`;
+}
+
+function filterTasks(f, el) {
+  STATE.taskFilter = f;
+  document.querySelectorAll('#page-tasks .tab-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderTasks();
+}
+
+// ── RENDER KANBAN ─────────────────────────────────────────────────────────────
+function renderKanban() {
+  const cols = [
+    {id:'todo',label:'TO DO',color:HEX.muted},
+    {id:'in-progress',label:'IN PROGRESS',color:HEX.cyan},
+    {id:'scheduled',label:'SCHEDULED',color:HEX.purple},
+    {id:'done',label:'DONE',color:HEX.green},
+  ];
+  document.getElementById('kanbanBoard').innerHTML = cols.map(col=>{
+    const tasks = STATE.tasks.filter(t=>t.status===col.id);
+    return `<div class="kanban-col">
+      <div class="kanban-header">
+        <span class="kanban-title" style="color:${col.color}">${col.label}</span>
+        <span class="kanban-count">${tasks.length}</span>
+      </div>
+      ${tasks.length ? tasks.map(t=>{
+        const linked = t.kpiId ? STATE.kpis.find(k=>k.id===t.kpiId) : null;
+        return `<div class="kanban-item" onclick="editTask('${t.id}')">
+          <div class="kanban-item-title">${t.title}</div>
+          ${linked?`<div class="kanban-item-kpi">🎯 ${linked.name}</div>`:''}
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:9px;color:${priorityColor(t.priority)}">${t.priority}</span>
+            ${t.due?`<span style="font-size:9px;color:${isOverdue(t.due)&&t.status!=='done'?HEX.red:HEX.muted}">${fmt(t.due)}</span>`:''}
+          </div>
+          ${t.assignee?`<div style="font-size:9px;color:var(--muted);margin-top:4px">👤 ${t.assignee}</div>`:''}
+        </div>`;
+      }).join('') : `<div style="text-align:center;padding:20px;font-size:10px;color:var(--muted)">Empty</div>`}
+    </div>`;
+  }).join('');
+}
+
+// ── RENDER PROGRESS ───────────────────────────────────────────────────────────
+function renderProgress() {
+  // KPI progress bars
+  document.getElementById('kpiProgress').innerHTML = STATE.kpis.length
+    ? STATE.kpis.map(k=>{
+        const pct = kpiPct(k); const col = statusColor(kpiStatus(k));
+        return `<div class="progress-section">
+          <div class="progress-label"><span>${k.name}</span><span style="color:${col}">${k.current}${k.unit} / ${k.target}${k.unit}</span></div>
+          <div class="prog-wrap"><div class="prog-fill" style="width:${pct}%;background:linear-gradient(90deg,${col}88,${col})"></div></div>
+          <div style="font-size:9px;color:var(--muted);margin-top:3px">${pct}% complete</div>
+        </div>`;
+      }).join('')
+    : `<div class="empty"><div class="empty-icon">📈</div><div class="empty-text">No KPIs to track</div></div>`;
+
+  // Timeline
+  const sorted = [...STATE.tasks].sort((a,b)=>new Date(a.createdAt)-new Date(b.createdAt));
+  document.getElementById('progressTimeline').innerHTML = sorted.slice(0,10).length
+    ? sorted.slice(0,10).map(t=>`
+        <div class="timeline-item">
+          <div class="timeline-dot ${t.status==='done'?'done':t.status==='in-progress'?'active':'pending'}"></div>
+          <div class="timeline-content">
+            <div class="timeline-title">${t.title}</div>
+            <div class="timeline-meta">${t.status.toUpperCase()} · ${t.due?'Due: '+fmt(t.due):''} ${t.completedAt?'· Done: '+fmt(t.completedAt):''}</div>
+          </div>
+        </div>`).join('')
+    : `<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">No tasks yet</div></div>`;
+
+  drawProgressChart();
+}
+
+// ── RENDER ANALYTICS ──────────────────────────────────────────────────────────
+function renderAnalytics() {
+  const avgPct = STATE.kpis.length ? Math.round(STATE.kpis.reduce((a,k)=>a+kpiPct(k),0)/STATE.kpis.length) : 0;
+  const completionRate = STATE.tasks.length ? Math.round((STATE.tasks.filter(t=>t.status==='done').length/STATE.tasks.length)*100) : 0;
+  const critical = STATE.tasks.filter(t=>t.priority==='Critical'&&t.status!=='done').length;
+
+  document.getElementById('analyticsStats').innerHTML = [
+    ['Avg KPI Progress', avgPct+'%', HEX.cyan],
+    ['Task Completion Rate', completionRate+'%', HEX.green],
+    ['Critical Open Tasks', critical, HEX.red],
+  ].map(([l,v,c])=>`<div class="card" style="text-align:center">
+    <div class="stat-num" style="color:${c}">${v}</div>
+    <div class="stat-lbl">${l}</div>
+  </div>`).join('');
+
+  // Health matrix
+  document.getElementById('healthMatrix').innerHTML = STATE.kpis.length
+    ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">` +
+      STATE.kpis.map(k=>{
+        const pct=kpiPct(k); const col=statusColor(kpiStatus(k)); const st=kpiStatus(k);
+        return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;border-radius:50%;border:3px solid ${col};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${col};flex-shrink:0">${pct}%</div>
+          <div>
+            <div style="font-size:11px;color:var(--text);font-weight:600">${k.name}</div>
+            <div style="font-size:9px;color:${col};margin-top:2px">${st.toUpperCase().replace('-',' ')}</div>
+          </div>
+        </div>`;
+      }).join('') + '</div>'
+    : `<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">No KPIs to analyze</div></div>`;
+
+  drawCategoryChart();
+  drawVelocityChart();
+}
+
+// ── WORKSPACE ─────────────────────────────────────────────────────────────────
+function saveWorkspace() {
+  STATE.workspace.name = document.getElementById('wsName').value || 'My Enterprise';
+  STATE.workspace.org = document.getElementById('wsOrg').value;
+  document.getElementById('workspaceName').textContent = STATE.workspace.name;
+  save(); closeModal('workspace'); toast('Workspace saved ✓');
+}
+function clearAllData() {
+  if(!confirm('Reset ALL data? This cannot be undone!')) return;
+  STATE.kpis=[]; STATE.tasks=[]; save(); closeModal('workspace'); refreshAll(); toast('Data cleared');
+}
+function exportData() {
+  const blob = new Blob([JSON.stringify({kpis:STATE.kpis,tasks:STATE.tasks,workspace:STATE.workspace},null,2)],{type:'application/json'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='enterprise-kpi-export.json'; a.click(); toast('Data exported ✓');
+}
+
+// ── SEARCH ────────────────────────────────────────────────────────────────────
+function handleSearch(q) {
+  if(!q) return;
+  // highlight matching tasks/kpis - simplified: just toast count
+  const kMatch = STATE.kpis.filter(k=>k.name.toLowerCase().includes(q.toLowerCase())).length;
+  const tMatch = STATE.tasks.filter(t=>t.title.toLowerCase().includes(q.toLowerCase())).length;
+  // (full search implementation left as UX enhancement)
+}
+
+// ── CANVAS CHARTS ─────────────────────────────────────────────────────────────
+function drawDashChart() {
+  const canvas = document.getElementById('dashChart'); if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.parentElement.clientWidth - 40; const H = 180;
+  canvas.width=W; canvas.height=H;
+  ctx.clearRect(0,0,W,H);
+  if(!STATE.kpis.length) {
+    ctx.fillStyle='#4a6080'; ctx.font='11px JetBrains Mono'; ctx.textAlign='center';
+    ctx.fillText('Add KPIs to see progress chart',W/2,H/2); return;
+  }
+  const pad={t:10,r:16,b:36,l:36};
+  const dw=W-pad.l-pad.r, dh=H-pad.t-pad.b;
+  const data = STATE.kpis.slice(0,8);
+  const bw = dw/data.length*0.6;
+  const gap = dw/data.length;
+  ctx.strokeStyle='#1e2d45'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=pad.t+i*(dh/4);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+dw,y);ctx.stroke();}
+  data.forEach((k,i)=>{
+    const pct=kpiPct(k); const col=statusColor(kpiStatus(k));
+    const bh=(pct/100)*dh; const x=pad.l+i*gap+gap*0.2; const y=pad.t+dh-bh;
+    const grd=ctx.createLinearGradient(0,y,0,y+bh);
+    grd.addColorStop(0,col); grd.addColorStop(1,col+'44');
+    ctx.fillStyle=grd; ctx.beginPath(); ctx.roundRect(x,y,bw,bh,4); ctx.fill();
+    ctx.fillStyle='#4a6080'; ctx.font='8px JetBrains Mono'; ctx.textAlign='center';
+    const label=k.name.length>8?k.name.slice(0,8)+'…':k.name;
+    ctx.fillText(label,x+bw/2,H-8);
+    ctx.fillStyle=col; ctx.font='9px JetBrains Mono';
+    ctx.fillText(pct+'%',x+bw/2,y-4);
+  });
+}
+
+function drawProgressChart() {
+  const canvas = document.getElementById('progressChart'); if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W=canvas.parentElement.clientWidth-40; const H=200;
+  canvas.width=W; canvas.height=H;
+  ctx.clearRect(0,0,W,H);
+  const statuses=['todo','in-progress','scheduled','done'];
+  const labels=['To Do','In Progress','Scheduled','Done'];
+  const colors=['#4a6080','#00e5ff','#c084fc','#00ff9d'];
+  const counts=statuses.map(s=>STATE.tasks.filter(t=>t.status===s).length);
+  const total=counts.reduce((a,b)=>a+b,0)||1;
+  if(!STATE.tasks.length){
+    ctx.fillStyle='#4a6080'; ctx.font='11px JetBrains Mono'; ctx.textAlign='center';
+    ctx.fillText('Add tasks to see progress',W/2,H/2); return;
+  }
+  // donut chart
+  const cx=W*0.35, cy=H/2, R=70, inner=42;
+  let start=-Math.PI/2;
+  counts.forEach((c,i)=>{
+    if(!c) return;
+    const sweep=(c/total)*Math.PI*2;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,R,start,start+sweep);
+    ctx.closePath(); ctx.fillStyle=colors[i]; ctx.fill();
+    start+=sweep;
+  });
+  ctx.beginPath(); ctx.arc(cx,cy,inner,0,Math.PI*2); ctx.fillStyle='#0c0f1a'; ctx.fill();
+  ctx.fillStyle='#fff'; ctx.font='bold 18px Syne'; ctx.textAlign='center'; ctx.fillText(total,cx,cy+5);
+  ctx.fillStyle='#4a6080'; ctx.font='9px JetBrains Mono'; ctx.fillText('TOTAL',cx,cy+18);
+  // legend
+  const lx=W*0.6;
+  counts.forEach((c,i)=>{
+    const y=H/2-((counts.length-1)*20)/2+i*22;
+    ctx.fillStyle=colors[i]; ctx.fillRect(lx,y-8,12,12);
+    ctx.fillStyle='#e2eaf5'; ctx.font='10px JetBrains Mono'; ctx.textAlign='left';
+    ctx.fillText(`${labels[i]}: ${c}`,lx+18,y+2);
+    ctx.fillStyle='#4a6080'; ctx.font='9px JetBrains Mono';
+    ctx.fillText(`(${Math.round((c/total)*100)}%)`,lx+18+ctx.measureText(`${labels[i]}: ${c}`).width+6,y+2);
+  });
+}
+
+function drawCategoryChart() {
+  const canvas = document.getElementById('categoryChart'); if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W=canvas.parentElement.clientWidth-40; const H=200;
+  canvas.width=W; canvas.height=H;
+  ctx.clearRect(0,0,W,H);
+  const cats=[...new Set(STATE.kpis.map(k=>k.category))];
+  if(!cats.length){ctx.fillStyle='#4a6080';ctx.font='11px JetBrains Mono';ctx.textAlign='center';ctx.fillText('No KPI data',W/2,H/2);return;}
+  const pad={t:10,r:16,b:36,l:36};
+  const dw=W-pad.l-pad.r, dh=H-pad.t-pad.b;
+  const avgs=cats.map(cat=>{const ks=STATE.kpis.filter(k=>k.category===cat);return Math.round(ks.reduce((a,k)=>a+kpiPct(k),0)/ks.length);});
+  const bw=dw/cats.length*0.6, gap=dw/cats.length;
+  ctx.strokeStyle='#1e2d45';ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=pad.t+i*(dh/4);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+dw,y);ctx.stroke();}
+  cats.forEach((cat,i)=>{
+    const pct=avgs[i];const bh=(pct/100)*dh;const x=pad.l+i*gap+gap*0.2;const y=pad.t+dh-bh;
+    ctx.fillStyle='#00e5ff88';ctx.beginPath();ctx.roundRect(x,y,bw,bh,4);ctx.fill();
+    ctx.fillStyle='#4a6080';ctx.font='8px JetBrains Mono';ctx.textAlign='center';
+    ctx.fillText(cat.slice(0,7),x+bw/2,H-8);
+    ctx.fillStyle='#00e5ff';ctx.font='9px JetBrains Mono';ctx.fillText(pct+'%',x+bw/2,y-4);
+  });
+}
+
+function drawVelocityChart() {
+  const canvas = document.getElementById('velocityChart'); if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W=canvas.parentElement.clientWidth-40; const H=200;
+  canvas.width=W; canvas.height=H;
+  ctx.clearRect(0,0,W,H);
+  // build weekly buckets (last 6 weeks)
+  const weeks=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i*7);
+    weeks.push({label:`W-${i}`,start:new Date(d-7*86400000),end:d,count:0});
+  }
+  STATE.tasks.filter(t=>t.status==='done'&&t.completedAt).forEach(t=>{
+    const d=new Date(t.completedAt);
+    weeks.forEach(w=>{if(d>=w.start&&d<=w.end)w.count++;});
+  });
+  const maxV=Math.max(...weeks.map(w=>w.count),1);
+  const pad={t:10,r:16,b:36,l:36};
+  const dw=W-pad.l-pad.r, dh=H-pad.t-pad.b;
+  ctx.strokeStyle='#1e2d45';ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=pad.t+i*(dh/4);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+dw,y);ctx.stroke();}
+  const pts=weeks.map((w,i)=>({x:pad.l+i*(dw/(weeks.length-1)),y:pad.t+dh-(w.count/maxV)*dh}));
+  ctx.beginPath();ctx.strokeStyle='#c084fc';ctx.lineWidth=2;
+  pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+  ctx.stroke();
+  // fill under
+  ctx.beginPath();pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+  ctx.lineTo(pts[pts.length-1].x,pad.t+dh);ctx.lineTo(pts[0].x,pad.t+dh);ctx.closePath();
+  ctx.fillStyle='#c084fc18';ctx.fill();
+  pts.forEach((p,i)=>{
+    ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fillStyle='#c084fc';ctx.fill();
+    ctx.fillStyle='#4a6080';ctx.font='8px JetBrains Mono';ctx.textAlign='center';
+    ctx.fillText(weeks[i].label,p.x,H-8);
+    if(weeks[i].count>0){ctx.fillStyle='#c084fc';ctx.font='9px JetBrains Mono';ctx.fillText(weeks[i].count,p.x,p.y-8);}
+  });
+}
+
+// ── REFRESH ALL ───────────────────────────────────────────────────────────────
+function refreshAll() {
+  updateBadges();
+  const active = document.querySelector('.page.active');
+  if(active) {
+    const id = active.id.replace('page-','');
+    renderPage(id);
+  }
+}
+
+// ── DATE BADGE ────────────────────────────────────────────────────────────────
+function updateDate() {
+  document.getElementById('dateBadge').textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+}
+
+// ── SAMPLE DATA ───────────────────────────────────────────────────────────────
+function loadSampleData() {
+  if(STATE.kpis.length || STATE.tasks.length) return;
+  STATE.kpis = [
+    {id:uid(),name:'Critical Vuln SLA',current:97,target:100,unit:'%',category:'Security',direction:'higher',priority:'High',desc:'% of critical vulns remediated within SLA',history:[{value:97,date:new Date().toISOString(),note:'Initial'}],createdAt:new Date().toISOString()},
+    {id:uid(),name:'MTTD',current:2.8,target:4,unit:'hours',category:'Security',direction:'lower',priority:'High',desc:'Mean time to detect threats',history:[{value:2.8,date:new Date().toISOString(),note:'Initial'}],createdAt:new Date().toISOString()},
+    {id:uid(),name:'App Surface Tested',current:94,target:100,unit:'%',category:'Security',direction:'higher',priority:'Medium',desc:'% of application surface area tested',history:[{value:94,date:new Date().toISOString(),note:'Initial'}],createdAt:new Date().toISOString()},
+    {id:uid(),name:'PCI-DSS Coverage',current:100,target:100,unit:'%',category:'Compliance',direction:'higher',priority:'High',desc:'Compliance coverage',history:[{value:100,date:new Date().toISOString(),note:'Initial'}],createdAt:new Date().toISOString()},
+  ];
+  const t1=new Date(); t1.setDate(t1.getDate()+3);
+  const t2=new Date(); t2.setDate(t2.getDate()+7);
+  const t3=new Date(); t3.setDate(t3.getDate()-1);
+  STATE.tasks = [
+    {id:uid(),title:'Run nuclei scan on production',desc:'Full vulnerability scan on prod environment',status:'in-progress',priority:'Critical',due:t1.toISOString().split('T')[0],kpiId:STATE.kpis[0].id,assignee:'John D.',tag:'Security',createdAt:new Date().toISOString(),completedAt:null},
+    {id:uid(),title:'OWASP Top 10 review Q1',desc:'Complete OWASP checklist for all endpoints',status:'scheduled',priority:'High',due:t2.toISOString().split('T')[0],kpiId:STATE.kpis[2].id,assignee:'Sarah M.',tag:'Pentest',createdAt:new Date().toISOString(),completedAt:null},
+    {id:uid(),title:'PCI-DSS audit preparation',desc:'Gather evidence for upcoming audit',status:'todo',priority:'High',due:t1.toISOString().split('T')[0],kpiId:STATE.kpis[3].id,assignee:'',tag:'Compliance',createdAt:new Date().toISOString(),completedAt:null},
+    {id:uid(),title:'Patch CVE-2025-1234',desc:'Critical patch on payment gateway',status:'done',priority:'Critical',due:t3.toISOString().split('T')[0],kpiId:STATE.kpis[0].id,assignee:'John D.',tag:'Security',createdAt:new Date(Date.now()-86400000*3).toISOString(),completedAt:new Date(Date.now()-86400000).toISOString()},
+  ];
+  save();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+load();
+loadSampleData();
+document.getElementById('workspaceName').textContent = STATE.workspace.name;
+updateDate();
+setInterval(updateDate,60000);
+refreshAll();
+renderDashboard();
+window.addEventListener('resize',()=>{
+  const active=document.querySelector('.page.active');
+  if(active)renderPage(active.id.replace('page-',''));
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HexStrike KPI Dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#080c14;color:#e2e8f0;font-family:'Courier New',monospace;font-size:13px;min-height:100vh}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#0d1117}::-webkit-scrollbar-thumb{background:#1e3a5f;border-radius:3px}
+.header{background:linear-gradient(90deg,#0d1117,#0f1923,#0d1117);border-bottom:1px solid #1e3a5f;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:14px}
+.logo-icon{width:38px;height:38px;background:linear-gradient(135deg,#00d4ff,#0055ff);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.logo-title{font-size:16px;font-weight:700;color:#fff;letter-spacing:4px}
+.logo-sub{font-size:9px;color:#00d4ff;letter-spacing:4px}
+.header-right{display:flex;align-items:center;gap:20px}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#0aff84;transition:all 0.4s}
+.live-dot.dim{background:#0aff8444;box-shadow:none!important}
+.live-label{font-size:9px;color:#0aff84;letter-spacing:2px}
+.vitals{display:flex;gap:14px;font-size:10px;color:#5a7a9a}
+.vitals span{color:#00d4ff}
+.vitals .mem{color:#ffd600}
+.vitals .up{color:#0aff84}
+.btn{background:#00d4ff22;border:1px solid #00d4ff55;color:#00d4ff;padding:5px 14px;border-radius:5px;cursor:pointer;font-size:9px;letter-spacing:2px;font-family:monospace}
+.btn:disabled{background:#1a2a3a;border-color:#1e3a5f;color:#5a7a9a;cursor:not-allowed}
+.btn-red{background:#ff4d6d22;border:1px solid #ff4d6d55;color:#ff4d6d;width:100%;padding:11px;border-radius:7px;font-size:11px;font-weight:700;letter-spacing:3px;cursor:pointer}
+.btn-red:disabled{background:#1a2a3a;border-color:#1e3a5f;color:#5a7a9a;cursor:not-allowed}
+.tabs{background:#0d1117;border-bottom:1px solid #1a2a3a;padding:0 24px;display:flex}
+.tab{background:none;border:none;border-bottom:2px solid transparent;color:#5a7a9a;padding:10px 20px;cursor:pointer;font-size:9px;letter-spacing:3px;text-transform:uppercase;font-family:monospace;transition:color 0.2s}
+.tab.active{border-bottom-color:#00d4ff;color:#00d4ff}
+.tab.scan-tab.active{border-bottom-color:#ff4d6d;color:#ff4d6d}
+.content{padding:22px 24px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.card{background:#0d1a2a;border:1px solid #1e3a5f;border-radius:10px;padding:20px 22px}
+.card-title{font-size:9px;color:#00d4ff;letter-spacing:3px;margin-bottom:14px;text-transform:uppercase}
+.kpi-card{background:linear-gradient(135deg,#0d1a2a,#0a1520);border:1px solid #1e3a5f;border-radius:10px;padding:16px 18px;position:relative;overflow:hidden}
+.kpi-label{font-size:9px;color:#5a7a9a;letter-spacing:2px;margin-bottom:7px;text-transform:uppercase}
+.kpi-value{font-size:24px;font-weight:700;color:#fff;margin-bottom:6px}
+.kpi-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.kpi-target{font-size:9px;color:#3a5a7a}
+.kpi-delta{font-size:10px}
+.badge{padding:2px 9px;border-radius:4px;font-size:10px;font-family:monospace;font-weight:700;letter-spacing:2px}
+.badge-pass{background:#0aff8422;color:#0aff84;border:1px solid #0aff8444}
+.badge-warn{background:#ffd60022;color:#ffd600;border:1px solid #ffd60044}
+.badge-fail{background:#ff4d6d22;color:#ff4d6d;border:1px solid #ff4d6d44}
+.minibar-wrap{background:#1a2a3a;border-radius:3px;height:6px;overflow:hidden;flex:1}
+.minibar-fill{height:100%;border-radius:3px;transition:width 0.8s ease}
+.sla-row{margin-bottom:16px}
+.sla-labels{display:flex;justify-content:space-between;margin-bottom:6px;font-size:10px}
+.stat-box{background:#0d1a2a;border-radius:10px;padding:18px 20px;text-align:center}
+.stat-num{font-size:38px;font-weight:700}
+.stat-label{font-size:9px;color:#5a7a9a;letter-spacing:2px;margin-top:5px;text-transform:uppercase}
+.pentest-card{background:#0d1a2a;border:1px solid #1e3a5f;border-radius:10px;padding:18px 20px}
+.pentest-icon{font-size:20px;margin-bottom:7px}
+.pentest-val{font-size:18px;font-weight:700;color:#fff;margin-bottom:4px}
+.pentest-lbl{font-size:9px;color:#5a7a9a;letter-spacing:1px;text-transform:uppercase;margin-bottom:9px}
+.terminal{background:#060a0f;border:1px solid #1e3a5f;border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.terminal-header{padding:12px 18px;border-bottom:1px solid #1e3a5f;font-size:9px;color:#0aff84;letter-spacing:3px;display:flex;justify-content:space-between;align-items:center}
+.terminal-body{flex:1;min-height:500px;padding:14px 16px;overflow-y:auto;font-family:monospace;font-size:11px;line-height:1.8}
+.log-ts{color:#2a4a2a;margin-right:10px}
+.input-group{margin-bottom:14px}
+.input-label{font-size:9px;color:#5a7a9a;letter-spacing:2px;margin-bottom:6px}
+.input-field{width:100%;background:#0a1520;border:1px solid #1e3a5f;border-radius:6px;padding:9px 12px;color:#e2e8f0;font-size:12px;font-family:monospace;outline:none}
+.finding{border-radius:6px;padding:8px 12px;margin-bottom:6px}
+.finding-row{display:flex;justify-content:space-between;margin-bottom:3px}
+.finding-title{font-size:10px;color:#e2e8f0;font-weight:600}
+.finding-sev{font-size:8px;letter-spacing:1px;text-transform:uppercase}
+.finding-desc{font-size:9px;color:#5a7a9a}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.result-box{background:#0a1520;border-radius:7px;padding:10px 12px}
+.result-key{font-size:8px;color:#5a7a9a;letter-spacing:2px;margin-bottom:3px}
+.result-val{font-size:12px;font-weight:700}
+canvas{display:block}
+.hidden{display:none}
+.pulse{animation:pulseAnim 1.1s infinite}
+@keyframes pulseAnim{0%,100%{opacity:1;box-shadow:0 0 9px #0aff84}50%{opacity:0.3;box-shadow:none}}
+.cursor{animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.cat-row{margin-bottom:10px}
+.cat-labels{display:flex;justify-content:space-between;margin-bottom:5px;font-size:9px}
+.tool-grid{display:grid;grid-template-columns:repeat(4,1fr)}
+.tool-item{padding:11px 18px;border-bottom:1px solid #1a2a3a;display:flex;align-items:center;gap:9px;font-size:11px;font-family:monospace}
+.tool-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.online-dot{background:#0aff84;box-shadow:0 0 6px #0aff84}
+.offline-dot{background:#2a3a4a}
+.section{display:none}
+.section.active{display:block}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">🛡</div>
+    <div>
+      <div class="logo-title">HEXSTRIKE</div>
+      <div class="logo-sub">LIVE SECURITY KPI DASHBOARD</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div style="display:flex;align-items:center;gap:7px">
+      <div class="live-dot pulse" id="pulseDot"></div>
+      <span class="live-label">LIVE · REFRESH <span id="countdown">30</span>s</span>
+    </div>
+    <div class="vitals" id="vitals">
+      CPU <span id="vCpu">7.9%</span> &nbsp;
+      MEM <span class="mem" id="vMem">77.0%</span> &nbsp;
+      UP <span class="up" id="vUp">64.9h</span>
+    </div>
+    <button class="btn" id="refreshBtn" onclick="refreshData()">⟳ REFRESH</button>
+    <span style="font-size:9px;color:#5a7a9a" id="lastRefresh"></span>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="showTab('overview',this)">OVERVIEW</button>
+  <button class="tab" onclick="showTab('vulns',this)">VULNERABILITIES</button>
+  <button class="tab" onclick="showTab('pentest',this)">PENTEST</button>
+  <button class="tab scan-tab" onclick="showTab('scan',this)">⚡ SCAN</button>
+  <button class="tab" onclick="showTab('system',this)">SYSTEM</button>
+</div>
+
+<div class="content">
+
+  <!-- OVERVIEW -->
+  <div id="sec-overview" class="section active">
+    <div class="grid4" id="kpiGrid"></div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Vulnerability Trend (Live)</div>
+        <canvas id="lineChart" width="440" height="200"></canvas>
+        <div style="display:flex;gap:16px;margin-top:8px">
+          <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:2px;background:#ff4d6d"></div><span style="font-size:9px;color:#5a7a9a">Critical</span></div>
+          <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:2px;background:#ffd600"></div><span style="font-size:9px;color:#5a7a9a">High</span></div>
+          <div style="display:flex;align-items:center;gap:5px"><div style="width:12px;height:2px;background:#00d4ff"></div><span style="font-size:9px;color:#5a7a9a">Medium</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Security Posture Radar</div>
+        <canvas id="radarChart" width="440" height="220"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- VULNERABILITIES -->
+  <div id="sec-vulns" class="section">
+    <div class="grid2" style="margin-bottom:16px">
+      <div class="card">
+        <div class="card-title">Monthly Breakdown</div>
+        <canvas id="barChart" width="440" height="220"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">SLA Compliance</div>
+        <div id="slaGrid"></div>
+      </div>
+    </div>
+    <div class="grid4" id="statGrid"></div>
+  </div>
+
+  <!-- PENTEST -->
+  <div id="sec-pentest" class="section">
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">OWASP Top 10 Coverage</div>
+      <canvas id="hbarChart" width="900" height="220"></canvas>
+    </div>
+    <div class="grid3" id="pentestGrid"></div>
+  </div>
+
+  <!-- SCAN -->
+  <div id="sec-scan" class="section">
+    <div class="grid2">
+      <div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title" style="color:#ff4d6d">⚡ LAUNCH SCAN</div>
+          <div class="input-group">
+            <div class="input-label">TARGET (domain / IP)</div>
+            <input class="input-field" id="scanTarget" placeholder="e.g. shop.example.com" onkeydown="if(event.key==='Enter')runScan()"/>
+          </div>
+          <div class="input-group">
+            <div class="input-label">TOOL</div>
+            <select class="input-field" id="scanTool">
+              <option>nuclei</option><option>nmap</option><option>sqlmap</option>
+              <option>dalfox</option><option>feroxbuster</option><option>nikto</option>
+              <option>subfinder</option><option>trivy</option><option>wpscan</option><option>ffuf</option>
+            </select>
+          </div>
+          <button class="btn-red" id="scanBtn" onclick="runScan()">▶ RUN SCAN</button>
+        </div>
+        <div id="scanResults"></div>
+      </div>
+      <div class="terminal">
+        <div class="terminal-header">
+          <span>● TERMINAL</span>
+          <span id="termStatus" style="color:#ffd600;display:none">⟳ RUNNING</span>
+        </div>
+        <div class="terminal-body" id="termLog">
+          <span style="color:#5a7a9a">$ Ready. Enter a target and launch a scan.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SYSTEM -->
+  <div id="sec-system" class="section">
+    <div class="grid3" style="margin-bottom:16px" id="sysMetrics"></div>
+    <div class="grid2" style="margin-bottom:14px">
+      <div class="card">
+        <div class="card-title">Network I/O</div>
+        <div id="netIO"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Server Stats</div>
+        <div id="serverStats"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Category Availability</div>
+      <div class="grid3" id="catGrid"></div>
+      <div style="margin-top:16px;display:flex;align-items:center;gap:10px">
+        <div class="live-dot pulse"></div>
+        <span style="color:#0aff84;font-size:11px;font-weight:700;letter-spacing:2px" id="serverStatus">HEXSTRIKE v6.0.0 — OPERATIONAL</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── LIVE DATA (seeded from real HexStrike API call) ──────────────────────────
+let LD = {
+  status:"healthy", version:"6.0.0",
+  uptime_h: (233588/3600).toFixed(1),
+  cpu:7.9, memory:77.0, disk:5.4,
+  cmds:2187, success_rate:12.3, avg_exec:3.50,
+  total_tools:127, avail_tools:41,
+  net_recv:(17152047104/1e9).toFixed(2),
+  net_sent:(1368110080/1e9).toFixed(2),
+  cats:{
+    "Web Security":{a:9,t:19},"Cloud":{a:5,t:10},"Network":{a:4,t:10},
+    "Essential":{a:6,t:8},"OSINT":{a:2,t:13},"Forensics":{a:3,t:16}
+  }
+};
+
+let vulnHistory = [
+  {m:"Oct",c:12,h:28,med:45},{m:"Nov",c:9,h:22,med:38},{m:"Dec",c:7,h:18,med:30},
+  {m:"Jan",c:5,h:14,med:25},{m:"Feb",c:3,h:10,med:18},{m:"Mar",c:2,h:7,med:12}
+];
+
+const kpiCards = [
+  {label:"Critical Vuln SLA",value:"97%",target:"≥95%",status:"pass",delta:"+2%"},
+  {label:"MTTD",value:"2.8h",target:"<4h",status:"pass",delta:"-1.2h"},
+  {label:"MTTR (Critical)",value:"58h",target:"<72h",status:"pass",delta:"-14h"},
+  {label:"App Surface Tested",value:"94%",target:"100%",status:"warn",delta:"-6%"},
+  {label:"Recurrence Rate",value:"3.2%",target:"<5%",status:"pass",delta:"-1.8%"},
+  {label:"Admin Exposure",value:"0",target:"0",status:"pass",delta:"—"},
+  {label:"PCI-DSS Coverage",value:"100%",target:"100%",status:"pass",delta:"✓"},
+  {label:"Pentest QoQ",value:"-18%",target:"Decreasing",status:"pass",delta:"↓ Good"},
+];
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function showTab(name, el) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('sec-'+name).classList.add('active');
+  el.classList.add('active');
+  setTimeout(()=>drawCharts(),50);
+}
+
+// ── RENDER KPI CARDS ──────────────────────────────────────────────────────────
+function renderKPI() {
+  const g = document.getElementById('kpiGrid');
+  g.innerHTML = kpiCards.map(k=>`
+    <div class="kpi-card">
+      <div style="position:absolute;top:0;right:0;width:50px;height:50px;background:${k.status==='pass'?'#0aff8408':'#ffd60008'};border-radius:0 10px 0 50px"></div>
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-row">
+        <span class="kpi-target">TARGET: ${k.target}</span>
+        <span class="badge badge-${k.status}">${k.status.toUpperCase()}</span>
+      </div>
+      <div class="kpi-delta" style="color:${k.status==='pass'?'#0aff84':'#ffd600'}">${k.delta}</div>
+    </div>`).join('');
+}
+
+// ── SLA GRID ──────────────────────────────────────────────────────────────────
+function renderSLA() {
+  const slas = [["Critical (24h)",97,"#0aff84"],["High (7d)",91,"#0aff84"],["Medium (30d)",88,"#ffd600"],["Low (90d)",79,"#ffd600"]];
+  document.getElementById('slaGrid').innerHTML = slas.map(([l,p,c])=>`
+    <div class="sla-row">
+      <div class="sla-labels"><span style="color:#8aa0b8">${l}</span><span style="color:${c};font-weight:700">${p}%</span></div>
+      <div class="minibar-wrap"><div class="minibar-fill" style="width:${p}%;background:linear-gradient(90deg,${c}88,${c})"></div></div>
+    </div>`).join('');
+}
+
+// ── STAT GRID ────────────────────────────────────────────────────────────────
+function renderStats() {
+  const stats = [["Open Critical",2,"#ff4d6d"],["Open High",7,"#ffd600"],["Open Medium",12,"#00d4ff"],["Resolved / Mo",38,"#0aff84"]];
+  document.getElementById('statGrid').innerHTML = stats.map(([l,v,c])=>`
+    <div class="stat-box" style="border:1px solid ${c}44">
+      <div class="stat-num" style="color:${c}">${v}</div>
+      <div class="stat-label">${l}</div>
+    </div>`).join('');
+}
+
+// ── PENTEST GRID ──────────────────────────────────────────────────────────────
+function renderPentest() {
+  const items = [["🔌","API Endpoints","100%","pass"],["💳","Payment Flow","100%","pass"],["🔐","Auth Bypass","Sprint ✓","pass"],["🌐","Subdomain Coverage","98%","pass"],["🚫","Admin Exposure","0 found","pass"],["📉","QoQ Trend","-18%","pass"]];
+  document.getElementById('pentestGrid').innerHTML = items.map(([ic,lb,vl,st])=>`
+    <div class="pentest-card">
+      <div class="pentest-icon">${ic}</div>
+      <div class="pentest-val">${vl}</div>
+      <div class="pentest-lbl">${lb}</div>
+      <span class="badge badge-${st}">${st.toUpperCase()}</span>
+    </div>`).join('');
+}
+
+// ── SYSTEM PANELS ─────────────────────────────────────────────────────────────
+function renderSystem() {
+  document.getElementById('sysMetrics').innerHTML = [
+    ["CPU Usage",LD.cpu.toFixed(1),"%","#00d4ff"],
+    ["Memory",LD.memory.toFixed(1),"%","#ffd600"],
+    ["Disk",LD.disk,"%","#0aff84"]
+  ].map(([l,v,s,c])=>`
+    <div class="card">
+      <div class="kpi-label">${l}</div>
+      <div style="font-size:32px;font-weight:700;color:${c};margin-bottom:10px">${v}${s}</div>
+      <div class="minibar-wrap"><div class="minibar-fill" style="width:${v}%;background:linear-gradient(90deg,${c}88,${c})"></div></div>
+    </div>`).join('');
+
+  document.getElementById('netIO').innerHTML = [["Received",LD.net_recv,"GB","#0aff84"],["Sent",LD.net_sent,"GB","#00d4ff"]].map(([l,v,s,c])=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding:10px 14px;background:#0a1520;border-radius:7px">
+      <span style="font-size:10px;color:#5a7a9a">${l}</span>
+      <span style="font-size:20px;font-weight:700;color:${c}">${v} <span style="font-size:11px">${s}</span></span>
+    </div>`).join('');
+
+  document.getElementById('serverStats').innerHTML = [
+    ["Uptime",`${LD.uptime_h}h`,"#0aff84"],["Avg Exec",`${LD.avg_exec}s`,"#00d4ff"],
+    ["Commands",LD.cmds,"#ffd600"],["Success Rate",`${LD.success_rate}%`,"#ff4d6d"],
+    ["Version",`v${LD.version}`,"#00d4ff"],["Tools Online",`${LD.avail_tools}/${LD.total_tools}`,"#0aff84"]
+  ].map(([l,v,c])=>`
+    <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #1a2a3a">
+      <span style="font-size:9px;color:#5a7a9a;text-transform:uppercase;letter-spacing:1px">${l}</span>
+      <span style="font-size:10px;color:${c};font-weight:700">${v}</span>
+    </div>`).join('');
+
+  document.getElementById('catGrid').innerHTML = Object.entries(LD.cats).map(([cat,d])=>{
+    const pct=Math.round((d.a/d.t)*100);
+    const c=pct>=70?'#0aff84':pct>=40?'#ffd600':'#ff4d6d';
+    return `<div class="cat-row">
+      <div class="cat-labels"><span style="color:#8aa0b8;text-transform:uppercase;letter-spacing:1px">${cat}</span><span style="color:${c};font-weight:700">${d.a}/${d.t}</span></div>
+      <div class="minibar-wrap"><div class="minibar-fill" style="width:${pct}%;background:linear-gradient(90deg,${c}88,${c})"></div></div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('serverStatus').textContent = `HEXSTRIKE v${LD.version} — OPERATIONAL`;
+  document.getElementById('vCpu').textContent = LD.cpu.toFixed(1)+'%';
+  document.getElementById('vMem').textContent = LD.memory.toFixed(1)+'%';
+  document.getElementById('vUp').textContent = LD.uptime_h+'h';
+}
+
+// ── CANVAS CHARTS ─────────────────────────────────────────────────────────────
+function drawLine(canvasId, data) {
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.parentElement.clientWidth - 44 || 440;
+  canvas.width = W; canvas.height = 200;
+  ctx.clearRect(0,0,W,200);
+  const pad={t:10,r:20,b:30,l:35};
+  const dw=W-pad.l-pad.r, dh=200-pad.t-pad.b;
+  const maxV=Math.max(...data.map(d=>Math.max(d.c,d.h,d.med)))+2;
+  const x=i=>pad.l+i*(dw/(data.length-1));
+  const y=v=>pad.t+dh-(v/maxV)*dh;
+  // grid
+  ctx.strokeStyle='#1a2a3a'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const yy=pad.t+i*(dh/4);ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(pad.l+dw,yy);ctx.stroke();}
+  // axes labels
+  ctx.fillStyle='#5a7a9a'; ctx.font='9px Courier New';
+  data.forEach((d,i)=>{ctx.textAlign='center';ctx.fillText(d.m,x(i),200-8);});
+  for(let i=0;i<=4;i++){const v=Math.round((maxV*(4-i)/4));ctx.textAlign='right';ctx.fillText(v,pad.l-4,pad.t+i*(dh/4)+3);}
+  // lines
+  [[d=>d.c,'#ff4d6d'],[d=>d.h,'#ffd600'],[d=>d.med,'#00d4ff']].forEach(([fn,color])=>{
+    ctx.beginPath(); ctx.strokeStyle=color; ctx.lineWidth=2;
+    data.forEach((d,i)=>i===0?ctx.moveTo(x(i),y(fn(d))):ctx.lineTo(x(i),y(fn(d))));
+    ctx.stroke();
+    data.forEach((d,i)=>{ctx.beginPath();ctx.arc(x(i),y(fn(d)),3,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();});
+  });
+}
+
+function drawBar(canvasId, data) {
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.parentElement.clientWidth - 44 || 440;
+  canvas.width = W; canvas.height = 220;
+  ctx.clearRect(0,0,W,220);
+  const pad={t:10,r:20,b:30,l:35};
+  const dw=W-pad.l-pad.r, dh=220-pad.t-pad.b;
+  const maxV=Math.max(...data.map(d=>Math.max(d.c,d.h,d.med)))+2;
+  const bw=(dw/data.length)*0.25;
+  const grp=dw/data.length;
+  // grid
+  ctx.strokeStyle='#1a2a3a'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const yy=pad.t+i*(dh/4);ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(pad.l+dw,yy);ctx.stroke();}
+  ctx.fillStyle='#5a7a9a'; ctx.font='9px Courier New';
+  data.forEach((d,i)=>{ctx.textAlign='center';ctx.fillText(d.m,pad.l+i*grp+grp/2,220-8);});
+  // bars
+  data.forEach((d,i)=>{
+    const base=pad.l+i*grp+grp*0.1;
+    const y=v=>pad.t+dh-(v/maxV)*dh;
+    [[d.c,'#ff4d6d'],[d.h,'#ffd600'],[d.med,'#00d4ff']].forEach(([v,c],j)=>{
+      const h=(v/maxV)*dh;
+      ctx.fillStyle=c; ctx.beginPath();
+      ctx.roundRect(base+j*(bw+2),y(v),bw,h,3);
+      ctx.fill();
+    });
+  });
+}
+
+function drawHBar(canvasId) {
+  const owasp=[["Injection",98],["Auth",95],["XSS",92],["IDOR",88],["Misconfig",97],["Crypto",85],["Supply Chain",78],["API",90]];
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.parentElement.clientWidth - 44 || 900;
+  canvas.width = W; canvas.height = 220;
+  ctx.clearRect(0,0,W,220);
+  const pad={t:10,r:20,b:10,l:90};
+  const dw=W-pad.l-pad.r, dh=220-pad.t-pad.b;
+  const rh=(dh/owasp.length)-4;
+  ctx.fillStyle='#8aa0b8'; ctx.font='9px Courier New';
+  owasp.forEach(([name,pct],i)=>{
+    const y=pad.t+i*(dh/owasp.length);
+    ctx.textAlign='right'; ctx.fillText(name,pad.l-6,y+rh/2+3);
+    const color=pct>=90?'#0aff84':pct>=80?'#ffd600':'#ff4d6d';
+    const w=(pct/100)*dw;
+    ctx.fillStyle='#1a2a3a'; ctx.beginPath(); ctx.roundRect(pad.l,y,dw,rh,3); ctx.fill();
+    ctx.fillStyle=color; ctx.beginPath(); ctx.roundRect(pad.l,y,w,rh,3); ctx.fill();
+    ctx.fillStyle=color; ctx.textAlign='left'; ctx.fillText(pct+'%',pad.l+w+4,y+rh/2+3);
+  });
+}
+
+function drawRadar(canvasId) {
+  const data=[["Vuln Mgmt",88],["Pen Testing",92],["API Coverage",85],["Compliance",94],["Auth Testing",90],["Data Security",82]];
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.parentElement.clientWidth - 44 || 440;
+  canvas.width = W; canvas.height = 220;
+  ctx.clearRect(0,0,W,220);
+  const cx=W/2, cy=115, R=85, n=data.length;
+  const angle=(i)=>Math.PI*2*(i/n)-Math.PI/2;
+  // grid rings
+  for(let r=1;r<=4;r++){
+    ctx.beginPath(); ctx.strokeStyle='#1e3a5f'; ctx.lineWidth=1;
+    data.forEach((_,i)=>{const a=angle(i);const rr=(R*r/4);i===0?ctx.moveTo(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr):ctx.lineTo(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr);});
+    ctx.closePath(); ctx.stroke();
+  }
+  // spokes
+  data.forEach((_,i)=>{ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(angle(i))*R,cy+Math.sin(angle(i))*R);ctx.strokeStyle='#1e3a5f';ctx.stroke();});
+  // fill
+  ctx.beginPath();
+  data.forEach(([,v],i)=>{const a=angle(i);const r=R*(v/100);i===0?ctx.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r):ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);});
+  ctx.closePath(); ctx.fillStyle='#00d4ff18'; ctx.fill(); ctx.strokeStyle='#00d4ff'; ctx.lineWidth=2; ctx.stroke();
+  // dots
+  data.forEach(([name,v],i)=>{
+    const a=angle(i);const r=R*(v/100);
+    ctx.beginPath();ctx.arc(cx+Math.cos(a)*r,cy+Math.sin(a)*r,3,0,Math.PI*2);ctx.fillStyle='#00d4ff';ctx.fill();
+    const lx=cx+Math.cos(a)*(R+16), ly=cy+Math.sin(a)*(R+16);
+    ctx.fillStyle='#5a7a9a';ctx.font='8px Courier New';ctx.textAlign='center';ctx.fillText(name,lx,ly);
+  });
+}
+
+function drawCharts() {
+  drawLine('lineChart', vulnHistory);
+  drawBar('barChart', vulnHistory);
+  drawHBar('hbarChart');
+  drawRadar('radarChart');
+}
+
+// ── AUTO REFRESH ──────────────────────────────────────────────────────────────
+let cdVal = 30;
+setInterval(()=>{
+  cdVal--;
+  if(cdVal<=0){cdVal=30;refreshData();}
+  document.getElementById('countdown').textContent=cdVal;
+},1000);
+
+function refreshData() {
+  const btn=document.getElementById('refreshBtn');
+  btn.textContent='⟳ SYNCING...'; btn.disabled=true;
+  // Simulate live drift on server metrics
+  LD.cpu = parseFloat((7+Math.random()*8).toFixed(1));
+  LD.memory = parseFloat((74+Math.random()*6).toFixed(1));
+  LD.cmds += Math.floor(Math.random()*5)+1;
+  LD.avg_exec = parseFloat((3.2+Math.random()*1.2).toFixed(2));
+  LD.success_rate = parseFloat((11+Math.random()*4).toFixed(1));
+  // drift vuln history
+  const last=vulnHistory[vulnHistory.length-1];
+  vulnHistory = [...vulnHistory.slice(1),{
+    m:"Now",
+    c:Math.max(0,last.c+Math.floor(Math.random()*3)-1),
+    h:Math.max(0,last.h+Math.floor(Math.random()*4)-2),
+    med:Math.max(0,last.med+Math.floor(Math.random()*5)-3)
+  }];
+  renderSystem();
+  drawCharts();
+  document.getElementById('lastRefresh').textContent = new Date().toLocaleTimeString();
+  cdVal=30;
+  setTimeout(()=>{btn.textContent='⟳ REFRESH';btn.disabled=false;},600);
+}
+
+// ── LIVE SCAN ─────────────────────────────────────────────────────────────────
+async function runScan() {
+  const target = document.getElementById('scanTarget').value.trim();
+  const tool = document.getElementById('scanTool').value;
+  if(!target) return;
+  const btn = document.getElementById('scanBtn');
+  const log = document.getElementById('termLog');
+  const status = document.getElementById('termStatus');
+  btn.disabled=true; btn.textContent='⟳ SCANNING...'; status.style.display='block';
+  document.getElementById('scanResults').innerHTML='';
+  log.innerHTML='';
+  const addLog=(msg,color='#00d4ff')=>{
+    const ts=new Date().toLocaleTimeString();
+    log.innerHTML+=`<div style="color:${color}"><span class="log-ts">${ts}</span>${msg}</div>`;
+    log.scrollTop=log.scrollHeight;
+  };
+  addLog(`[INIT] Launching ${tool} against ${target}`,'#ffd600');
+  addLog(`[HEXSTRIKE] Connecting to scan engine...`,'#5a7a9a');
+  addLog(`[API] Sending request to AI analysis layer...`,'#00d4ff');
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-20250514",
+        max_tokens:1000,
+        system:`You are a cybersecurity scan simulator for HexStrike platform targeting e-commerce applications. Return ONLY valid JSON (no markdown, no extra text):
+{"tool":string,"target":string,"duration_seconds":number,"findings":[{"severity":"critical"|"high"|"medium"|"low","title":string,"description":string}],"ports_open":[number],"summary":string,"risk_score":number}
+Include 3-6 realistic findings. Be specific and technical.`,
+        messages:[{role:"user",content:`Simulate ${tool} scan on: ${target}`}]
+      })
+    });
+    const data = await res.json();
+    const text = (data.content||[]).map(b=>b.text||'').join('');
+    const result = JSON.parse(text.replace(/```json|```/g,'').trim());
+    await sleep(500);
+    addLog(`[SCAN] Probing ${target}...`,'#00d4ff');
+    await sleep(400);
+    addLog(`[SCAN] Fingerprinting services...`,'#00d4ff');
+    await sleep(300);
+    if(result.ports_open?.length) addLog(`[OPEN PORTS] ${result.ports_open.join(', ')}`,'#0aff84');
+    await sleep(200);
+    (result.findings||[]).forEach(f=>{
+      const c=f.severity==='critical'?'#ff4d6d':f.severity==='high'?'#ffd600':f.severity==='medium'?'#00d4ff':'#0aff84';
+      addLog(`[${f.severity.toUpperCase()}] ${f.title}`,c);
+    });
+    addLog(`[DONE] Scan complete in ${result.duration_seconds}s · Risk score: ${result.risk_score}/100`,'#0aff84');
+    renderScanResult(result);
+  } catch(e) {
+    addLog(`[ERROR] ${e.message}`,'#ff4d6d');
+  }
+  log.innerHTML += `<span class="cursor" style="color:#0aff84">█</span>`;
+  btn.disabled=false; btn.textContent='▶ RUN SCAN'; status.style.display='none';
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+function renderScanResult(r) {
+  const sevColor=s=>s==='critical'?'#ff4d6d':s==='high'?'#ffd600':s==='medium'?'#00d4ff':'#0aff84';
+  const riskColor=r.risk_score>70?'#ff4d6d':r.risk_score>40?'#ffd600':'#0aff84';
+  document.getElementById('scanResults').innerHTML=`
+    <div class="card">
+      <div class="card-title" style="color:#0aff84">SCAN RESULTS</div>
+      <div class="result-grid">
+        <div class="result-box"><div class="result-key">TOOL</div><div class="result-val" style="color:#00d4ff">${r.tool}</div></div>
+        <div class="result-box"><div class="result-key">TARGET</div><div class="result-val" style="color:#00d4ff">${r.target}</div></div>
+        <div class="result-box"><div class="result-key">DURATION</div><div class="result-val" style="color:#00d4ff">${r.duration_seconds}s</div></div>
+        <div class="result-box"><div class="result-key">RISK SCORE</div><div class="result-val" style="color:${riskColor}">${r.risk_score}/100</div></div>
+      </div>
+      <div style="font-size:9px;color:#5a7a9a;margin-bottom:12px">${r.summary}</div>
+      <div style="font-size:9px;color:#00d4ff;letter-spacing:2px;margin-bottom:8px">FINDINGS (${r.findings?.length})</div>
+      ${(r.findings||[]).map(f=>`
+        <div class="finding" style="background:${sevColor(f.severity)}11;border:1px solid ${sevColor(f.severity)}33">
+          <div class="finding-row">
+            <span class="finding-title">${f.title}</span>
+            <span class="finding-sev" style="color:${sevColor(f.severity)}">${f.severity}</span>
+          </div>
+          <div class="finding-desc">${f.description}</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+// ── TOOL STATUS (from live data) ──────────────────────────────────────────────
+const onlineTools=["nuclei","nmap","sqlmap","dalfox","feroxbuster","nikto","gobuster","subfinder","trivy","wpscan","ffuf","katana","amass","masscan","rustscan","hakrawler","httpx","jaeles","gau","waybackurls"];
+const offlineTools=["hydra","metasploit","burpsuite","ghidra","wireshark","enum4linux","dirb","angr","maltego","sherlock"];
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+renderKPI();
+renderSLA();
+renderStats();
+renderPentest();
+renderSystem();
+window.addEventListener('load',()=>setTimeout(drawCharts,100));
+window.addEventListener('resize',drawCharts);
+</script>
+</body>
+</html>

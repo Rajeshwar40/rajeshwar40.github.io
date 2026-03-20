@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kanika's Pregnancy Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blush:#f2c4ce; --rose:#e8a0b0; --mauve:#c27d8e; --deep-mauve:#9e5c70;
+    --cream:#fdf6f0; --warm-white:#fff9f5; --petal:#fde8ef; --soft-pink:#f9d5df;
+    --sage:#b8c9b0; --gold:#c9a97a; --lavender:#ede9fe;
+    --text-dark:#4a3540; --text-mid:#7a5565; --text-light:#a88898;
+    --border:#f0d5de; --shadow:rgba(194,125,142,0.15); --shadow-md:rgba(194,125,142,0.25);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Lato',sans-serif;background:var(--cream);color:var(--text-dark);min-height:100vh;
+    background-image:radial-gradient(ellipse at 10% 0%,rgba(242,196,206,0.35) 0%,transparent 50%),
+      radial-gradient(ellipse at 90% 100%,rgba(253,213,223,0.3) 0%,transparent 50%);}
+
+  /* HEADER */
+  .header{background:linear-gradient(135deg,#f9e4eb 0%,#fdf0f5 40%,#f5e8f0 100%);border-bottom:1px solid var(--border);padding:28px 40px 24px;position:relative;overflow:hidden;}
+  .header::before{content:'✦';position:absolute;right:60px;top:18px;font-size:48px;color:rgba(194,125,142,0.12);font-family:'Playfair Display',serif;}
+  .header::after{content:'❧';position:absolute;right:30px;bottom:10px;font-size:32px;color:rgba(194,125,142,0.15);}
+  .header-inner{max-width:1100px;margin:0 auto;}
+  .header h1{font-family:'Playfair Display',serif;font-size:2.1rem;font-weight:600;color:var(--deep-mauve);letter-spacing:0.01em;line-height:1.2;}
+  .header h1 span{font-style:italic;color:var(--mauve);}
+  .header-sub{font-size:0.85rem;color:var(--text-light);margin-top:4px;letter-spacing:0.05em;text-transform:uppercase;font-weight:300;}
+  .floral-accent{text-align:center;font-size:1.1rem;color:var(--rose);letter-spacing:8px;margin:6px 0 0;}
+
+  /* NAV */
+  .nav-wrap{background:var(--warm-white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 2px 12px var(--shadow);}
+  .nav{max-width:1100px;margin:0 auto;display:flex;overflow-x:auto;padding:0 20px;gap:2px;}
+  .nav::-webkit-scrollbar{height:2px;}.nav::-webkit-scrollbar-thumb{background:var(--blush);}
+  .tab-btn{background:none;border:none;cursor:pointer;padding:16px 18px;font-family:'Lato',sans-serif;font-size:0.8rem;
+    font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-light);position:relative;white-space:nowrap;transition:color 0.25s;}
+  .tab-btn::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:2px;background:var(--mauve);transform:scaleX(0);transition:transform 0.25s ease;border-radius:2px;}
+  .tab-btn.active{color:var(--deep-mauve);}.tab-btn.active::after{transform:scaleX(1);}.tab-btn:hover{color:var(--mauve);}
+
+  /* LAYOUT */
+  .main{max-width:1100px;margin:0 auto;padding:32px 20px 60px;}
+  .panel{display:none;animation:fadeSlide 0.3s ease;}.panel.active{display:block;}
+  @keyframes fadeSlide{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+  /* SECTION HEADER */
+  .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+  .section-title{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:600;color:var(--deep-mauve);}
+  .section-title span{font-size:1.2rem;margin-right:8px;}
+  .header-btns{display:flex;gap:10px;flex-wrap:wrap;}
+
+  /* BUTTONS */
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:30px;border:none;
+    cursor:pointer;font-family:'Lato',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;transition:all 0.2s;}
+  .btn-primary{background:linear-gradient(135deg,var(--mauve),var(--deep-mauve));color:white;box-shadow:0 4px 14px rgba(158,92,112,0.3);}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(158,92,112,0.4);}
+  .btn-outline{background:white;color:var(--mauve);border:1.5px solid var(--rose);}
+  .btn-outline:hover{background:var(--petal);}
+  .btn-sm{padding:5px 11px;font-size:0.7rem;border-radius:20px;}
+  .btn-danger{background:#e8a0a0;color:#6b2f2f;border:none;}.btn-danger:hover{background:#e08080;}
+  .btn-edit{background:var(--soft-pink);color:var(--deep-mauve);border:none;}.btn-edit:hover{background:var(--blush);}
+
+  /* CARDS */
+  .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+  .entry-card{background:white;border:1px solid var(--border);border-radius:16px;padding:20px;position:relative;
+    transition:box-shadow 0.2s,transform 0.2s;box-shadow:0 2px 8px var(--shadow);}
+  .entry-card:hover{box-shadow:0 6px 20px var(--shadow-md);transform:translateY(-2px);}
+  .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .card-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:600;color:var(--text-dark);line-height:1.3;}
+  .card-actions{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;}
+  .card-meta{margin-top:10px;display:flex;flex-direction:column;gap:5px;}
+  .card-meta-row{display:flex;gap:8px;align-items:center;font-size:0.82rem;color:var(--text-mid);flex-wrap:wrap;}
+  .card-meta-row strong{color:var(--text-dark);}
+  .card-notes{margin-top:10px;padding:8px 12px;background:var(--cream);border-radius:8px;font-size:0.8rem;color:var(--text-light);font-style:italic;line-height:1.4;}
+
+  /* ATTACHMENT CHIPS */
+  .attachment-strip{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;}
+  .attach-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;
+    font-size:0.74rem;font-weight:700;cursor:pointer;transition:all 0.2s;border:none;background:none;}
+  .attach-chip.report{background:#fde8ef;color:var(--deep-mauve);}
+  .attach-chip.bill{background:#e8f4fd;color:#1a5a8a;}
+  .attach-chip.rx{background:var(--lavender);color:#5b3db0;}
+  .attach-chip:hover{opacity:0.8;transform:translateY(-1px);}
+
+  /* BADGES */
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;}
+  .badge-positive{background:#d4f0d4;color:#2d6a2d;} .badge-negative{background:#fde8e8;color:#8b2e2e;}
+  .badge-pending{background:#fff3cd;color:#856404;} .badge-active{background:#d4eeff;color:#1a5a8a;}
+  .badge-completed{background:#ede9fe;color:#5b3db0;} .badge-paid{background:#d4f0d4;color:#2d6a2d;}
+  .badge-unpaid{background:#fde8e8;color:#8b2e2e;}
+
+  /* MODAL */
+  .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(74,53,64,0.45);backdrop-filter:blur(4px);
+    z-index:1000;align-items:center;justify-content:center;padding:20px;}
+  .modal-backdrop.open{display:flex;}
+  .modal{background:var(--warm-white);border-radius:20px;padding:32px;width:100%;max-width:560px;
+    max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(74,53,64,0.3);animation:modalIn 0.3s ease;}
+  @keyframes modalIn{from{opacity:0;transform:scale(0.93) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);}}
+  .modal h2{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--deep-mauve);margin-bottom:22px;}
+  .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;flex-wrap:wrap;}
+
+  /* FORM */
+  .form-group{margin-bottom:16px;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  label{display:block;font-size:0.78rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-mid);margin-bottom:6px;}
+  input,select,textarea{width:100%;padding:10px 14px;background:white;border:1.5px solid var(--border);
+    border-radius:10px;font-family:'Lato',sans-serif;font-size:0.88rem;color:var(--text-dark);transition:border-color 0.2s;outline:none;}
+  input:focus,select:focus,textarea:focus{border-color:var(--mauve);}
+  textarea{resize:vertical;min-height:70px;}
+
+  /* MODAL DIVIDER & SECTION LABEL */
+  .modal-divider{border:none;border-top:1px solid var(--border);margin:20px 0;}
+  .modal-section-label{font-size:0.75rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;
+    color:var(--mauve);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+  .modal-section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+  /* UPLOAD ZONE */
+  .upload-zone{border:2px dashed var(--rose);border-radius:14px;padding:20px 16px;background:var(--petal);
+    text-align:center;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
+  .upload-zone:hover,.upload-zone.drag-over{border-color:var(--deep-mauve);background:var(--soft-pink);}
+  .upload-zone.drag-over{transform:scale(1.015);}
+  .upload-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;border:none;background:none;padding:0;margin:0;}
+  .upload-zone-icon{font-size:2rem;margin-bottom:6px;display:block;}
+  .upload-zone-title{font-size:0.85rem;font-weight:700;color:var(--text-mid);}
+  .upload-zone-sub{font-size:0.72rem;color:var(--text-light);margin-top:3px;}
+  .upload-wrap{margin-bottom:16px;}
+
+  /* FILE PREVIEW */
+  .file-preview-list{display:flex;flex-direction:column;gap:7px;margin-top:10px;}
+  .file-preview-item{display:flex;align-items:center;gap:8px;padding:8px 12px;
+    background:white;border:1px solid var(--border);border-radius:10px;font-size:0.8rem;}
+  .fp-icon{font-size:1.1rem;flex-shrink:0;}
+  .fp-name{font-weight:700;color:var(--text-dark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;}
+  .fp-size{font-size:0.7rem;color:var(--text-light);flex-shrink:0;}
+  .fp-remove{background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-light);padding:0 2px;line-height:1;margin-left:4px;}
+  .fp-remove:hover{color:#c05050;}
+
+  /* VIEWER */
+  .viewer-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .viewer-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+  .vtab{padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:white;
+    font-size:0.76rem;font-weight:700;cursor:pointer;color:var(--text-mid);transition:all 0.2s;}
+  .vtab.active{background:var(--deep-mauve);color:white;border-color:var(--deep-mauve);}
+  .viewer-body{background:#f0f0f0;border-radius:12px;overflow:hidden;min-height:180px;display:flex;align-items:center;justify-content:center;}
+  .viewer-img{width:100%;height:auto;display:block;max-height:62vh;object-fit:contain;}
+  .viewer-pdf{width:100%;height:62vh;border:none;display:block;}
+  .viewer-meta{margin-top:10px;font-size:0.78rem;color:var(--text-light);}
+  .viewer-meta a{color:var(--mauve);font-weight:700;}
+
+  /* EMPTY */
+  .empty-state{text-align:center;padding:60px 20px;color:var(--text-light);}
+  .empty-state .empty-icon{font-size:3rem;margin-bottom:12px;}
+  .empty-state p{font-family:'Playfair Display',serif;font-style:italic;font-size:1rem;}
+
+  /* SUMMARY */
+  .summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px;margin-bottom:30px;}
+  .stat-card{background:white;border:1px solid var(--border);border-radius:16px;padding:20px 22px;box-shadow:0 2px 8px var(--shadow);position:relative;overflow:hidden;}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+  .stat-card.c-pink::before{background:linear-gradient(90deg,var(--rose),var(--blush));}
+  .stat-card.c-mauve::before{background:linear-gradient(90deg,var(--mauve),var(--deep-mauve));}
+  .stat-card.c-gold::before{background:linear-gradient(90deg,var(--gold),#e8c498);}
+  .stat-card.c-sage::before{background:linear-gradient(90deg,var(--sage),#cddcc6);}
+  .stat-card.c-lav::before{background:linear-gradient(90deg,#b39ddb,#9575cd);}
+  .stat-label{font-size:0.72rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-light);margin-bottom:8px;}
+  .stat-value{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;color:var(--deep-mauve);}
+  .stat-sub{font-size:0.78rem;color:var(--text-light);margin-top:4px;}
+  .summary-section{margin-bottom:28px;}
+  .summary-section h3{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--text-mid);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+  .mini-list{display:flex;flex-direction:column;gap:8px;}
+  .mini-item{display:flex;align-items:center;justify-content:space-between;background:white;border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:0.85rem;}
+  .mini-item-left{display:flex;flex-direction:column;gap:2px;}
+  .mini-item-name{font-weight:700;color:var(--text-dark);}
+  .mini-item-sub{font-size:0.75rem;color:var(--text-light);}
+  .amount{font-weight:700;color:var(--deep-mauve);font-size:0.95rem;}
+  .total-row{background:linear-gradient(135deg,var(--petal),var(--soft-pink));border:1px solid var(--rose);border-radius:12px;
+    padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;font-weight:700;}
+  .total-row-label{font-size:0.85rem;color:var(--text-mid);letter-spacing:0.04em;}
+  .total-row-value{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--deep-mauve);}
+
+  /* TIMELINE */
+  .timeline{display:flex;flex-direction:column;gap:12px;}
+  .timeline-item{display:flex;gap:14px;align-items:flex-start;}
+  .timeline-dot{width:12px;height:12px;border-radius:50%;background:var(--mauve);flex-shrink:0;margin-top:4px;box-shadow:0 0 0 3px var(--soft-pink);}
+  .timeline-dot.positive{background:#5a9e5a;box-shadow:0 0 0 3px #d4f0d4;}
+  .timeline-dot.negative{background:#c05050;box-shadow:0 0 0 3px #fde8e8;}
+  .timeline-dot.pending{background:#c9a030;box-shadow:0 0 0 3px #fff3cd;}
+
+  /* FILTER */
+  .filter-bar{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
+  .filter-lbl{font-size:0.78rem;color:var(--text-light);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;}
+  .filter-btn{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:white;
+    font-size:0.78rem;font-weight:700;cursor:pointer;color:var(--text-mid);transition:all 0.2s;letter-spacing:0.04em;text-transform:uppercase;}
+  .filter-btn.active{background:var(--deep-mauve);color:white;border-color:var(--deep-mauve);}
+
+  /* PRESCRIPTIONS CARD HIGHLIGHT */
+  .rx-card{border-left:3px solid #9575cd;}
+
+  @media(max-width:600px){
+    .header{padding:20px;}.header h1{font-size:1.5rem;}
+    .main{padding:20px 12px 40px;}.form-row{grid-template-columns:1fr;}
+    .modal{padding:22px;}.summary-grid{grid-template-columns:1fr 1fr;}
+    .card-actions{flex-wrap:wrap;}
+  }
+  ::-webkit-scrollbar{width:6px;height:6px;}::-webkit-scrollbar-track{background:var(--cream);}::-webkit-scrollbar-thumb{background:var(--blush);border-radius:4px;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <h1>Kanika's <span>Pregnancy</span> Tracker</h1>
+    <div class="floral-accent">✿ ❀ ✿</div>
+    <div class="header-sub">A journey of love, health &amp; new beginnings</div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav-wrap">
+  <div class="nav">
+    <button class="tab-btn active" onclick="switchTab('summary',this)">📊 Summary</button>
+    <button class="tab-btn" onclick="switchTab('tests',this)">🩺 Tests</button>
+    <button class="tab-btn" onclick="switchTab('medicines',this)">💊 Medicines</button>
+    <button class="tab-btn" onclick="switchTab('bills',this)">🏥 Bills</button>
+    <button class="tab-btn" onclick="switchTab('expenses',this)">🛒 Expenses</button>
+    <button class="tab-btn" onclick="switchTab('prescriptions',this)">📋 Prescriptions</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- SUMMARY -->
+  <div class="panel active" id="panel-summary">
+    <div class="section-header"><div class="section-title"><span>📊</span> Overview</div></div>
+    <div class="summary-grid" id="summary-stats"></div>
+    <div class="summary-section"><h3>🩺 Recent Tests</h3><div class="mini-list" id="summary-tests"></div></div>
+    <div class="summary-section"><h3>💊 Active Medicines</h3><div class="mini-list" id="summary-meds"></div></div>
+    <div class="summary-section"><h3>🏥 Recent Bills</h3><div class="mini-list" id="summary-bills"></div></div>
+    <div class="summary-section"><h3>📋 Recent Prescriptions</h3><div class="mini-list" id="summary-rxs"></div></div>
+  </div>
+
+  <!-- TESTS -->
+  <div class="panel" id="panel-tests">
+    <div class="section-header">
+      <div class="section-title"><span>🩺</span> Pregnancy Tests</div>
+      <div class="header-btns">
+        <button class="btn btn-outline" onclick="exportCSV('tests')">⬇ CSV</button>
+        <button class="btn btn-primary" onclick="openModal('tests')">+ Add Test</button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <span class="filter-lbl">Filter:</span>
+      <button class="filter-btn active" onclick="setFilter('tests','all',this)">All</button>
+      <button class="filter-btn" onclick="setFilter('tests','Positive',this)">Positive</button>
+      <button class="filter-btn" onclick="setFilter('tests','Negative',this)">Negative</button>
+      <button class="filter-btn" onclick="setFilter('tests','Pending',this)">Pending</button>
+    </div>
+    <div class="timeline" id="tests-list"></div>
+  </div>
+
+  <!-- MEDICINES -->
+  <div class="panel" id="panel-medicines">
+    <div class="section-header">
+      <div class="section-title"><span>💊</span> Medicines &amp; Supplements</div>
+      <div class="header-btns">
+        <button class="btn btn-outline" onclick="exportCSV('medicines')">⬇ CSV</button>
+        <button class="btn btn-primary" onclick="openModal('medicines')">+ Add Medicine</button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <span class="filter-lbl">Filter:</span>
+      <button class="filter-btn active" onclick="setFilter('medicines','all',this)">All</button>
+      <button class="filter-btn" onclick="setFilter('medicines','active',this)">Active</button>
+      <button class="filter-btn" onclick="setFilter('medicines','completed',this)">Completed</button>
+    </div>
+    <div class="cards-grid" id="medicines-list"></div>
+  </div>
+
+  <!-- BILLS -->
+  <div class="panel" id="panel-bills">
+    <div class="section-header">
+      <div class="section-title"><span>🏥</span> Medical Bills</div>
+      <div class="header-btns">
+        <button class="btn btn-outline" onclick="exportCSV('bills')">⬇ CSV</button>
+        <button class="btn btn-primary" onclick="openModal('bills')">+ Add Bill</button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <span class="filter-lbl">Filter:</span>
+      <button class="filter-btn active" onclick="setFilter('bills','all',this)">All</button>
+      <button class="filter-btn" onclick="setFilter('bills','Unpaid',this)">Unpaid</button>
+      <button class="filter-btn" onclick="setFilter('bills','Paid',this)">Paid</button>
+    </div>
+    <div id="bills-total-row"></div>
+    <div class="cards-grid" id="bills-list"></div>
+  </div>
+
+  <!-- EXPENSES -->
+  <div class="panel" id="panel-expenses">
+    <div class="section-header">
+      <div class="section-title"><span>🛒</span> Other Expenses</div>
+      <div class="header-btns">
+        <button class="btn btn-outline" onclick="exportCSV('expenses')">⬇ CSV</button>
+        <button class="btn btn-primary" onclick="openModal('expenses')">+ Add Expense</button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <span class="filter-lbl">Category:</span>
+      <button class="filter-btn active" onclick="setFilter('expenses','all',this)">All</button>
+      <button class="filter-btn" onclick="setFilter('expenses','Food',this)">Food</button>
+      <button class="filter-btn" onclick="setFilter('expenses','Clothing',this)">Clothing</button>
+      <button class="filter-btn" onclick="setFilter('expenses','Equipment',this)">Equipment</button>
+      <button class="filter-btn" onclick="setFilter('expenses','Personal Care',this)">Personal Care</button>
+      <button class="filter-btn" onclick="setFilter('expenses','Baby Items',this)">Baby Items</button>
+      <button class="filter-btn" onclick="setFilter('expenses','Other',this)">Other</button>
+    </div>
+    <div id="expenses-total-row"></div>
+    <div class="cards-grid" id="expenses-list"></div>
+  </div>
+
+  <!-- PRESCRIPTIONS -->
+  <div class="panel" id="panel-prescriptions">
+    <div class="section-header">
+      <div class="section-title"><span>📋</span> Doctor Prescriptions</div>
+      <div class="header-btns">
+        <button class="btn btn-primary" onclick="openModal('prescriptions')">+ Add Prescription</button>
+      </div>
+    </div>
+    <div class="cards-grid" id="prescriptions-list"></div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- ============================================================ -->
+<!--  MODALS                                                        -->
+<!-- ============================================================ -->
+
+<!-- TESTS MODAL -->
+<div class="modal-backdrop" id="modal-tests">
+  <div class="modal">
+    <h2 id="modal-tests-title">Add Pregnancy Test</h2>
+    <input type="hidden" id="tests-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label>Test Name *</label><input type="text" id="tests-name" placeholder="e.g. hCG Blood Test"></div>
+      <div class="form-group"><label>Date</label><input type="date" id="tests-date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Result</label>
+        <select id="tests-result"><option value="Pending">Pending</option><option value="Positive">Positive</option><option value="Negative">Negative</option></select>
+      </div>
+      <div class="form-group"><label>Doctor Name</label><input type="text" id="tests-doctor" placeholder="e.g. Dr. Sharma"></div>
+    </div>
+    <div class="form-group"><label>Notes</label><textarea id="tests-notes" placeholder="Any additional notes..."></textarea></div>
+
+    <hr class="modal-divider">
+    <div class="modal-section-label">🩺 Attach Test Report</div>
+    <div class="upload-wrap">
+      <div class="upload-zone" id="tests-drop"
+           ondragover="onDragOver(event,this)" ondragleave="onDragLeave(this)" ondrop="onDrop(event,'t_rep','tests-fp')">
+        <span class="upload-zone-icon">📄</span>
+        <div class="upload-zone-title">Drop report here or click to browse</div>
+        <div class="upload-zone-sub">JPG, PNG or PDF · Max 8 MB per file · Multiple allowed</div>
+        <input type="file" accept="image/*,.pdf" multiple onchange="onFileSelect(event,'t_rep','tests-fp')">
+      </div>
+      <div class="file-preview-list" id="tests-fp"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('tests')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEntry('tests')">💾 Save Test</button>
+    </div>
+  </div>
+</div>
+
+<!-- MEDICINES MODAL -->
+<div class="modal-backdrop" id="modal-medicines">
+  <div class="modal">
+    <h2 id="modal-medicines-title">Add Medicine / Supplement</h2>
+    <input type="hidden" id="medicines-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label>Medicine Name *</label><input type="text" id="medicines-name" placeholder="e.g. Folic Acid"></div>
+      <div class="form-group"><label>Dosage</label><input type="text" id="medicines-dosage" placeholder="e.g. 500mg"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Frequency</label>
+        <select id="medicines-frequency"><option>Once daily</option><option>Twice daily</option><option>Thrice daily</option><option>Weekly</option><option>As needed</option><option>Other</option></select>
+      </div>
+      <div class="form-group"><label>Prescribed By</label><input type="text" id="medicines-doctor" placeholder="e.g. Dr. Sharma"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Start Date</label><input type="date" id="medicines-start"></div>
+      <div class="form-group"><label>End Date (optional)</label><input type="date" id="medicines-end"></div>
+    </div>
+    <div class="form-group"><label>Notes</label><textarea id="medicines-notes" placeholder="Instructions, side effects, etc."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('medicines')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEntry('medicines')">💾 Save Medicine</button>
+    </div>
+  </div>
+</div>
+
+<!-- BILLS MODAL -->
+<div class="modal-backdrop" id="modal-bills">
+  <div class="modal">
+    <h2 id="modal-bills-title">Add Medical Bill</h2>
+    <input type="hidden" id="bills-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label>Date</label><input type="date" id="bills-date"></div>
+      <div class="form-group"><label>Hospital / Clinic</label><input type="text" id="bills-hospital" placeholder="e.g. Apollo Clinic"></div>
+    </div>
+    <div class="form-group"><label>Description *</label><input type="text" id="bills-description" placeholder="e.g. Ultrasound Scan"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Amount (₹)</label><input type="number" id="bills-amount" placeholder="0" min="0"></div>
+      <div class="form-group"><label>Status</label>
+        <select id="bills-status"><option value="Unpaid">Unpaid</option><option value="Paid">Paid</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label>Notes</label><textarea id="bills-notes" placeholder="Any details..."></textarea></div>
+
+    <hr class="modal-divider">
+    <div class="modal-section-label">🧾 Attach Bill / Receipt</div>
+    <div class="upload-wrap">
+      <div class="upload-zone" id="bills-drop"
+           ondragover="onDragOver(event,this)" ondragleave="onDragLeave(this)" ondrop="onDrop(event,'b_scan','bills-fp')">
+        <span class="upload-zone-icon">🧾</span>
+        <div class="upload-zone-title">Drop bill scan / receipt here or click to browse</div>
+        <div class="upload-zone-sub">JPG, PNG or PDF · Max 8 MB per file · Multiple allowed</div>
+        <input type="file" accept="image/*,.pdf" multiple onchange="onFileSelect(event,'b_scan','bills-fp')">
+      </div>
+      <div class="file-preview-list" id="bills-fp"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('bills')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEntry('bills')">💾 Save Bill</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPENSES MODAL -->
+<div class="modal-backdrop" id="modal-expenses">
+  <div class="modal">
+    <h2 id="modal-expenses-title">Add Expense</h2>
+    <input type="hidden" id="expenses-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label>Item / Service *</label><input type="text" id="expenses-item" placeholder="e.g. Maternity dress"></div>
+      <div class="form-group"><label>Category</label>
+        <select id="expenses-category"><option>Food</option><option>Clothing</option><option>Equipment</option><option>Personal Care</option><option>Baby Items</option><option>Other</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Date</label><input type="date" id="expenses-date"></div>
+      <div class="form-group"><label>Amount (₹)</label><input type="number" id="expenses-amount" placeholder="0" min="0"></div>
+    </div>
+    <div class="form-group"><label>Notes</label><textarea id="expenses-notes" placeholder="Any details..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('expenses')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEntry('expenses')">💾 Save Expense</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRESCRIPTIONS MODAL -->
+<div class="modal-backdrop" id="modal-prescriptions">
+  <div class="modal">
+    <h2 id="modal-prescriptions-title">Add Doctor Prescription</h2>
+    <input type="hidden" id="prescriptions-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label>Doctor Name *</label><input type="text" id="prescriptions-doctor" placeholder="e.g. Dr. Priya Sharma"></div>
+      <div class="form-group"><label>Speciality</label><input type="text" id="prescriptions-speciality" placeholder="e.g. Gynaecologist"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Clinic / Hospital</label><input type="text" id="prescriptions-clinic" placeholder="e.g. Fortis Hospital"></div>
+      <div class="form-group"><label>Date of Visit</label><input type="date" id="prescriptions-date"></div>
+    </div>
+    <div class="form-group"><label>Diagnosis / Reason for Visit</label>
+      <input type="text" id="prescriptions-diagnosis" placeholder="e.g. Routine Antenatal Checkup"></div>
+    <div class="form-group"><label>Medicines Prescribed (summary)</label>
+      <textarea id="prescriptions-medicines" placeholder="e.g. Folic Acid 5mg, Ferrous Sulfate 200mg..."></textarea></div>
+    <div class="form-group"><label>Doctor's Instructions / Notes</label>
+      <textarea id="prescriptions-notes" placeholder="Follow-up date, dietary advice, etc."></textarea></div>
+
+    <hr class="modal-divider">
+    <div class="modal-section-label">📋 Upload Prescription Document</div>
+    <div class="upload-wrap">
+      <div class="upload-zone" id="rx-drop"
+           ondragover="onDragOver(event,this)" ondragleave="onDragLeave(this)" ondrop="onDrop(event,'rx_doc','rx-fp')">
+        <span class="upload-zone-icon">📋</span>
+        <div class="upload-zone-title">Drop prescription here or click to browse</div>
+        <div class="upload-zone-sub">JPG, PNG or PDF · Max 8 MB per file · Multiple pages allowed</div>
+        <input type="file" accept="image/*,.pdf" multiple onchange="onFileSelect(event,'rx_doc','rx-fp')">
+      </div>
+      <div class="file-preview-list" id="rx-fp"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('prescriptions')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEntry('prescriptions')">💾 Save Prescription</button>
+    </div>
+  </div>
+</div>
+
+<!-- FILE VIEWER MODAL -->
+<div class="modal-backdrop" id="modal-viewer">
+  <div class="modal" style="max-width:760px;">
+    <div class="viewer-header">
+      <h2 id="viewer-title" style="margin-bottom:0;font-size:1.2rem;">Document Viewer</h2>
+      <button class="btn btn-outline btn-sm" onclick="closeModal('viewer')">✕ Close</button>
+    </div>
+    <div class="viewer-tabs" id="viewer-tabs"></div>
+    <div class="viewer-body" id="viewer-body"></div>
+    <div class="viewer-meta" id="viewer-meta"></div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!--  SCRIPT                                                        -->
+<!-- ============================================================ -->
+<script>
+// ───────────────────────────────────────────────
+// STORAGE
+// ───────────────────────────────────────────────
+const KEYS = { tests:'pt2_tests', medicines:'pt2_meds', bills:'pt2_bills', expenses:'pt2_exp', prescriptions:'pt2_rxs' };
+const FILES_KEY = 'pt2_files'; // { entryId: { t_rep:[{name,type,size,data}], b_scan:[...], rx_doc:[...] } }
+
+function load(t){ try{ return JSON.parse(localStorage.getItem(KEYS[t]))||[]; }catch(e){ return []; } }
+function save(t,d){ localStorage.setItem(KEYS[t], JSON.stringify(d)); }
+function loadFiles(){ try{ return JSON.parse(localStorage.getItem(FILES_KEY))||{}; }catch(e){ return {}; } }
+function saveFiles(obj){ try{ localStorage.setItem(FILES_KEY, JSON.stringify(obj)); return true; }catch(e){ return false; } }
+function genId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+// ───────────────────────────────────────────────
+// FILE STAGING  (temp storage per open modal)
+// ───────────────────────────────────────────────
+// staged[slotKey] = [ {name,type,size,data}, ... ]
+const staged = {};
+
+function onDragOver(e, zone){ e.preventDefault(); zone.classList.add('drag-over'); }
+function onDragLeave(zone){ zone.classList.remove('drag-over'); }
+function onDrop(e, slotKey, previewId){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  readFilesIntoSlot(Array.from(e.dataTransfer.files), slotKey, previewId);
+}
+function onFileSelect(e, slotKey, previewId){
+  readFilesIntoSlot(Array.from(e.target.files), slotKey, previewId);
+  e.target.value='';
+}
+function readFilesIntoSlot(files, slotKey, previewId){
+  if(!staged[slotKey]) staged[slotKey]=[];
+  const MAX=8*1024*1024;
+  const ps = files.map(f=>new Promise(res=>{
+    if(f.size>MAX){ alert(`"${f.name}" is larger than 8 MB and was skipped.`); res(null); return; }
+    if(!f.type.match(/^image\/|pdf$/)&&!f.name.match(/\.(jpg|jpeg|png|gif|pdf)$/i)){ alert(`"${f.name}" is not a supported type.`); res(null); return; }
+    const r=new FileReader();
+    r.onload=ev=>res({name:f.name,type:f.type||'application/octet-stream',size:f.size,data:ev.target.result});
+    r.readAsDataURL(f);
+  }));
+  Promise.all(ps).then(results=>{
+    results.filter(Boolean).forEach(f=>staged[slotKey].push(f));
+    renderPreview(slotKey, previewId);
+  });
+}
+function removeStaged(slotKey, idx, previewId){
+  staged[slotKey].splice(idx,1);
+  renderPreview(slotKey, previewId);
+}
+function renderPreview(slotKey, previewId){
+  const el=document.getElementById(previewId); if(!el) return;
+  const files=staged[slotKey]||[];
+  el.innerHTML=files.map((f,i)=>`
+    <div class="file-preview-item">
+      <span class="fp-icon">${f.type.includes('pdf')?'📄':'🖼️'}</span>
+      <span class="fp-name" title="${esc(f.name)}">${esc(f.name)}</span>
+      <span class="fp-size">${fmtSize(f.size)}</span>
+      <button class="fp-remove" onclick="removeStaged('${slotKey}',${i},'${previewId}')" title="Remove">✕</button>
+    </div>`).join('');
+}
+function clearSlot(slotKey, previewId){
+  staged[slotKey]=[];
+  const el=document.getElementById(previewId); if(el) el.innerHTML='';
+}
+function fmtSize(b){ if(b<1024) return b+'B'; if(b<1048576) return (b/1024).toFixed(1)+'KB'; return (b/1048576).toFixed(1)+'MB'; }
+
+// Slot map per modal type
+const SLOT_MAP = { tests:{slot:'t_rep',preview:'tests-fp'}, bills:{slot:'b_scan',preview:'bills-fp'}, prescriptions:{slot:'rx_doc',preview:'rx-fp'} };
+
+// ───────────────────────────────────────────────
+// TABS
+// ───────────────────────────────────────────────
+function switchTab(name, btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  renderAll();
+}
+
+// ───────────────────────────────────────────────
+// FILTERS
+// ───────────────────────────────────────────────
+const filters={tests:'all',medicines:'all',bills:'all',expenses:'all'};
+function setFilter(type,val,btn){
+  filters[type]=val;
+  document.querySelectorAll('#panel-'+type+' .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const renders={tests:renderTests,medicines:renderMedicines,bills:renderBills,expenses:renderExpenses};
+  renders[type]&&renders[type]();
+}
+
+// ───────────────────────────────────────────────
+// MODAL OPEN / CLOSE
+// ───────────────────────────────────────────────
+const TITLES={tests:'Add Pregnancy Test',medicines:'Add Medicine / Supplement',bills:'Add Medical Bill',expenses:'Add Expense',prescriptions:'Add Doctor Prescription'};
+const DEFAULT_DATE_FIELD={tests:'tests-date',medicines:'medicines-start',bills:'bills-date',expenses:'expenses-date',prescriptions:'prescriptions-date'};
+
+function openModal(type, id){
+  clearForm(type);
+  document.getElementById('modal-'+type+'-title').textContent = id ? 'Edit Entry' : TITLES[type];
+  document.getElementById(type+'-edit-id').value = id||'';
+
+  if(id){
+    const item=load(type).find(x=>x.id===id);
+    if(item) fillForm(type,item);
+    // restore existing saved files into staged
+    const sm=SLOT_MAP[type];
+    if(sm){
+      const fmap=loadFiles();
+      staged[sm.slot] = ((fmap[id]||{})[sm.slot]||[]).map(f=>({...f}));
+      renderPreview(sm.slot, sm.preview);
+    }
+  } else {
+    const today=new Date().toISOString().split('T')[0];
+    const df=document.getElementById(DEFAULT_DATE_FIELD[type]);
+    if(df) df.value=today;
+  }
+  document.getElementById('modal-'+type).classList.add('open');
+}
+
+function closeModal(type){
+  document.getElementById('modal-'+type).classList.remove('open');
+  const sm=SLOT_MAP[type];
+  if(sm) clearSlot(sm.slot, sm.preview);
+}
+
+// Close on backdrop click
+document.querySelectorAll('.modal-backdrop').forEach(bd=>{
+  bd.addEventListener('click',e=>{ if(e.target===bd){ const t=bd.id.replace('modal-',''); closeModal(t); } });
+});
+
+function clearForm(type){
+  document.getElementById(type+'-edit-id').value='';
+  document.querySelectorAll('#modal-'+type+' input:not([type=hidden]),#modal-'+type+' select,#modal-'+type+' textarea')
+    .forEach(f=>{ if(f.tagName==='SELECT') f.selectedIndex=0; else f.value=''; });
+  const sm=SLOT_MAP[type];
+  if(sm) clearSlot(sm.slot, sm.preview);
+}
+
+function fillForm(type, item){
+  const s=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||'';};
+  if(type==='tests'){s('tests-name',item.name);s('tests-date',item.date);s('tests-result',item.result);s('tests-doctor',item.doctor);s('tests-notes',item.notes);}
+  else if(type==='medicines'){s('medicines-name',item.name);s('medicines-dosage',item.dosage);s('medicines-frequency',item.frequency);s('medicines-doctor',item.doctor);s('medicines-start',item.start);s('medicines-end',item.end);s('medicines-notes',item.notes);}
+  else if(type==='bills'){s('bills-date',item.date);s('bills-hospital',item.hospital);s('bills-description',item.description);s('bills-amount',item.amount);s('bills-status',item.status);s('bills-notes',item.notes);}
+  else if(type==='expenses'){s('expenses-item',item.item);s('expenses-category',item.category);s('expenses-date',item.date);s('expenses-amount',item.amount);s('expenses-notes',item.notes);}
+  else if(type==='prescriptions'){s('prescriptions-doctor',item.doctor);s('prescriptions-speciality',item.speciality);s('prescriptions-clinic',item.clinic);s('prescriptions-date',item.date);s('prescriptions-diagnosis',item.diagnosis);s('prescriptions-medicines',item.medicines);s('prescriptions-notes',item.notes);}
+}
+
+function readForm(type){
+  const g=id=>{const el=document.getElementById(id);return el?el.value.trim():'';};
+  const gn=id=>parseFloat(document.getElementById(id)?.value)||0;
+  if(type==='tests') return{name:g('tests-name'),date:g('tests-date'),result:g('tests-result'),doctor:g('tests-doctor'),notes:g('tests-notes')};
+  if(type==='medicines') return{name:g('medicines-name'),dosage:g('medicines-dosage'),frequency:g('medicines-frequency'),doctor:g('medicines-doctor'),start:g('medicines-start'),end:g('medicines-end'),notes:g('medicines-notes')};
+  if(type==='bills') return{date:g('bills-date'),hospital:g('bills-hospital'),description:g('bills-description'),amount:gn('bills-amount'),status:g('bills-status'),notes:g('bills-notes')};
+  if(type==='expenses') return{item:g('expenses-item'),category:g('expenses-category'),date:g('expenses-date'),amount:gn('expenses-amount'),notes:g('expenses-notes')};
+  if(type==='prescriptions') return{doctor:g('prescriptions-doctor'),speciality:g('prescriptions-speciality'),clinic:g('prescriptions-clinic'),date:g('prescriptions-date'),diagnosis:g('prescriptions-diagnosis'),medicines:g('prescriptions-medicines'),notes:g('prescriptions-notes')};
+}
+
+// ───────────────────────────────────────────────
+// SAVE ENTRY
+// ───────────────────────────────────────────────
+const REQ_FIELD={tests:'name',medicines:'name',bills:'description',expenses:'item',prescriptions:'doctor'};
+
+function saveEntry(type){
+  const data=readForm(type);
+  if(!data[REQ_FIELD[type]]){ alert('Please fill in the required field (marked with *).'); return; }
+
+  const items=load(type);
+  const editId=document.getElementById(type+'-edit-id').value;
+  const entryId=editId||genId();
+
+  if(editId){ const idx=items.findIndex(x=>x.id===editId); if(idx!==-1) items[idx]={...items[idx],...data}; }
+  else items.unshift({id:entryId,...data,createdAt:Date.now()});
+  save(type,items);
+
+  // Persist files
+  const sm=SLOT_MAP[type];
+  if(sm && staged[sm.slot]?.length){
+    const fmap=loadFiles();
+    if(!fmap[entryId]) fmap[entryId]={};
+    // merge with existing (editing keeps old + adds new)
+    const existing=(fmap[entryId][sm.slot]||[]);
+    fmap[entryId][sm.slot]=[...existing,...staged[sm.slot]];
+    if(!saveFiles(fmap)) alert('Storage is nearly full. Some files may not have saved. Try removing old entries.');
+    staged[sm.slot]=[];
+  }
+
+  closeModal(type);
+  renderAll();
+}
+
+// ───────────────────────────────────────────────
+// DELETE ENTRY
+// ───────────────────────────────────────────────
+function deleteEntry(type, id){
+  if(!confirm('Delete this entry? Attached files will also be removed.')) return;
+  save(type, load(type).filter(x=>x.id!==id));
+  const fmap=loadFiles(); delete fmap[id]; saveFiles(fmap);
+  renderAll();
+}
+
+function deleteFileFromEntry(entryId, slotKey, idx){
+  if(!confirm('Remove this file?')) return;
+  const fmap=loadFiles();
+  if(fmap[entryId]?.[slotKey]){ fmap[entryId][slotKey].splice(idx,1); saveFiles(fmap); }
+  renderAll();
+}
+
+// ───────────────────────────────────────────────
+// FILE VIEWER
+// ───────────────────────────────────────────────
+let _viewerEntryId='', _viewerSlot='';
+
+function viewFiles(entryId, slotKey, title){
+  const fmap=loadFiles();
+  const files=(fmap[entryId]||{})[slotKey]||[];
+  if(!files.length){ alert('No files attached to this entry.'); return; }
+  _viewerEntryId=entryId; _viewerSlot=slotKey;
+  document.getElementById('viewer-title').textContent=title;
+  buildViewerTabs(files);
+  showViewerFile(0, files);
+  document.getElementById('modal-viewer').classList.add('open');
+}
+
+function buildViewerTabs(files){
+  document.getElementById('viewer-tabs').innerHTML=files.map((f,i)=>`
+    <button class="vtab${i===0?' active':''}" onclick="showViewerFile(${i})">
+      ${f.type.includes('pdf')?'📄':'🖼️'} ${esc(f.name.length>22?f.name.slice(0,20)+'…':f.name)}
+    </button>
+    <button title="Delete file" style="background:#fde8e8;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:0.7rem;color:#8b2e2e;flex-shrink:0;" onclick="deleteFileFromEntry('${_viewerEntryId}','${_viewerSlot}',${i});closeModal('viewer');">✕</button>
+  `).join('');
+}
+
+function showViewerFile(idx, filesArg){
+  const fmap=loadFiles();
+  const files=filesArg||((fmap[_viewerEntryId]||{})[_viewerSlot]||[]);
+  const f=files[idx]; if(!f) return;
+  document.querySelectorAll('.vtab').forEach((t,i)=>t.classList.toggle('active',i===idx*2));
+  const body=document.getElementById('viewer-body');
+  const meta=document.getElementById('viewer-meta');
+  if(f.type.includes('pdf')){
+    body.innerHTML=`<iframe class="viewer-pdf" src="${f.data}" title="${esc(f.name)}"></iframe>`;
+  } else {
+    body.innerHTML=`<img class="viewer-img" src="${f.data}" alt="${esc(f.name)}">`;
+  }
+  meta.innerHTML=`📎 <strong>${esc(f.name)}</strong> &nbsp;·&nbsp; ${fmtSize(f.size)} &nbsp;·&nbsp; <a href="${f.data}" download="${esc(f.name)}">⬇ Download</a>`;
+}
+
+// ───────────────────────────────────────────────
+// HELPERS
+// ───────────────────────────────────────────────
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmt(n){ return '₹'+Number(n||0).toLocaleString('en-IN'); }
+function fmtDate(d){ if(!d) return '—'; const[y,m,day]=d.split('-'); return `${day}/${m}/${y}`; }
+function isActive(med){ if(!med.end) return true; return new Date(med.end)>=new Date(); }
+function resultBadge(r){ const c=r==='Positive'?'badge-positive':r==='Negative'?'badge-negative':'badge-pending'; return `<span class="badge ${c}">${r}</span>`; }
+function statusBadge(s,map){ return `<span class="badge ${map[s]||''}">${s}</span>`; }
+function emptyState(icon,msg){ return `<div class="empty-state"><div class="empty-icon">${icon}</div><p>${msg}</p></div>`; }
+
+function attachChips(entryId){
+  const fmap=loadFiles(); const files=fmap[entryId]||{};
+  let html='';
+  if((files.t_rep||[]).length) html+=`<button class="attach-chip report" onclick="viewFiles('${entryId}','t_rep','Test Report')">🩺 Report (${files.t_rep.length})</button>`;
+  if((files.b_scan||[]).length) html+=`<button class="attach-chip bill" onclick="viewFiles('${entryId}','b_scan','Bill Scan')">🧾 Bill (${files.b_scan.length})</button>`;
+  if((files.rx_doc||[]).length) html+=`<button class="attach-chip rx" onclick="viewFiles('${entryId}','rx_doc','Prescription')">📋 Rx (${files.rx_doc.length})</button>`;
+  return html?`<div class="attachment-strip">${html}</div>`:'';
+}
+
+// ───────────────────────────────────────────────
+// RENDER TESTS
+// ───────────────────────────────────────────────
+function renderTests(){
+  const items=load('tests');
+  const el=document.getElementById('tests-list');
+  const f=filters.tests;
+  const filtered=f==='all'?items:items.filter(x=>x.result===f);
+  if(!filtered.length){el.innerHTML=emptyState('🩺','No tests recorded yet. Add your first test!');return;}
+  el.innerHTML=filtered.map(t=>`
+    <div class="timeline-item">
+      <div class="timeline-dot ${(t.result||'').toLowerCase()}"></div>
+      <div class="entry-card" style="flex:1">
+        <div class="card-top">
+          <div class="card-title">${esc(t.name)}</div>
+          <div class="card-actions">
+            <button class="btn btn-edit btn-sm" onclick="openModal('tests','${t.id}')">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteEntry('tests','${t.id}')">🗑️</button>
+          </div>
+        </div>
+        <div class="card-meta">
+          <div class="card-meta-row">${resultBadge(t.result)} <span>•</span> <span>${fmtDate(t.date)}</span></div>
+          ${t.doctor?`<div class="card-meta-row">👩‍⚕️ <strong>${esc(t.doctor)}</strong></div>`:''}
+        </div>
+        ${t.notes?`<div class="card-notes">${esc(t.notes)}</div>`:''}
+        ${attachChips(t.id)}
+      </div>
+    </div>`).join('');
+}
+
+// ───────────────────────────────────────────────
+// RENDER MEDICINES
+// ───────────────────────────────────────────────
+function renderMedicines(){
+  const items=load('medicines');
+  const el=document.getElementById('medicines-list');
+  const f=filters.medicines;
+  const filtered=f==='all'?items:f==='active'?items.filter(isActive):items.filter(m=>!isActive(m));
+  if(!filtered.length){el.innerHTML=emptyState('💊','No medicines recorded yet.');return;}
+  el.innerHTML=filtered.map(m=>`
+    <div class="entry-card">
+      <div class="card-top">
+        <div class="card-title">${esc(m.name)}</div>
+        <div class="card-actions">
+          <button class="btn btn-edit btn-sm" onclick="openModal('medicines','${m.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteEntry('medicines','${m.id}')">🗑️</button>
+        </div>
+      </div>
+      <div class="card-meta">
+        <div class="card-meta-row">
+          ${statusBadge(isActive(m)?'Active':'Completed',{Active:'badge-active',Completed:'badge-completed'})}
+          <span>•</span> <strong>${esc(m.dosage||'—')}</strong> <span>•</span> ${esc(m.frequency||'')}
+        </div>
+        <div class="card-meta-row">📅 ${fmtDate(m.start)} ${m.end?'→ '+fmtDate(m.end):'→ ongoing'}</div>
+        ${m.doctor?`<div class="card-meta-row">👩‍⚕️ ${esc(m.doctor)}</div>`:''}
+      </div>
+      ${m.notes?`<div class="card-notes">${esc(m.notes)}</div>`:''}
+    </div>`).join('');
+}
+
+// ───────────────────────────────────────────────
+// RENDER BILLS
+// ───────────────────────────────────────────────
+function renderBills(){
+  const items=load('bills');
+  const el=document.getElementById('bills-list');
+  const tRow=document.getElementById('bills-total-row');
+  const f=filters.bills;
+  const filtered=f==='all'?items:items.filter(x=>x.status===f);
+  const total=items.reduce((s,x)=>s+(x.amount||0),0);
+  const unpaid=items.filter(x=>x.status==='Unpaid').reduce((s,x)=>s+(x.amount||0),0);
+  tRow.innerHTML=`<div class="total-row"><div><div class="total-row-label">Total Bills</div><div style="font-size:0.78rem;color:var(--text-light);margin-top:2px;">Unpaid: ${fmt(unpaid)}</div></div><div class="total-row-value">${fmt(total)}</div></div>`;
+  if(!filtered.length){el.innerHTML=emptyState('🏥','No bills recorded yet.');return;}
+  el.innerHTML=filtered.map(b=>`
+    <div class="entry-card">
+      <div class="card-top">
+        <div class="card-title">${esc(b.description)}</div>
+        <div class="card-actions">
+          <button class="btn btn-edit btn-sm" onclick="openModal('bills','${b.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteEntry('bills','${b.id}')">🗑️</button>
+        </div>
+      </div>
+      <div class="card-meta">
+        <div class="card-meta-row">${statusBadge(b.status,{Paid:'badge-paid',Unpaid:'badge-unpaid'})} <span>•</span> <span class="amount">${fmt(b.amount)}</span></div>
+        <div class="card-meta-row">🏥 <strong>${esc(b.hospital||'—')}</strong></div>
+        <div class="card-meta-row">📅 ${fmtDate(b.date)}</div>
+      </div>
+      ${b.notes?`<div class="card-notes">${esc(b.notes)}</div>`:''}
+      ${attachChips(b.id)}
+    </div>`).join('');
+}
+
+// ───────────────────────────────────────────────
+// RENDER EXPENSES
+// ───────────────────────────────────────────────
+const CAT_EMOJI={Food:'🍎',Clothing:'👗',Equipment:'🛒','Personal Care':'💆','Baby Items':'🍼',Other:'📦'};
+function renderExpenses(){
+  const items=load('expenses');
+  const el=document.getElementById('expenses-list');
+  const tRow=document.getElementById('expenses-total-row');
+  const f=filters.expenses;
+  const filtered=f==='all'?items:items.filter(x=>x.category===f);
+  const total=items.reduce((s,x)=>s+(x.amount||0),0);
+  tRow.innerHTML=`<div class="total-row"><div class="total-row-label">Total Expenses</div><div class="total-row-value">${fmt(total)}</div></div>`;
+  if(!filtered.length){el.innerHTML=emptyState('🛒','No expenses recorded yet.');return;}
+  el.innerHTML=filtered.map(e=>`
+    <div class="entry-card">
+      <div class="card-top">
+        <div class="card-title">${CAT_EMOJI[e.category]||'📦'} ${esc(e.item)}</div>
+        <div class="card-actions">
+          <button class="btn btn-edit btn-sm" onclick="openModal('expenses','${e.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteEntry('expenses','${e.id}')">🗑️</button>
+        </div>
+      </div>
+      <div class="card-meta">
+        <div class="card-meta-row"><span class="badge badge-pending">${esc(e.category)}</span> <span>•</span> <span class="amount">${fmt(e.amount)}</span></div>
+        <div class="card-meta-row">📅 ${fmtDate(e.date)}</div>
+      </div>
+      ${e.notes?`<div class="card-notes">${esc(e.notes)}</div>`:''}
+    </div>`).join('');
+}
+
+// ───────────────────────────────────────────────
+// RENDER PRESCRIPTIONS
+// ───────────────────────────────────────────────
+function renderPrescriptions(){
+  const items=load('prescriptions');
+  const el=document.getElementById('prescriptions-list');
+  if(!el) return;
+  if(!items.length){el.innerHTML=emptyState('📋','No prescriptions saved yet. Upload your first one!');return;}
+  el.innerHTML=items.map(p=>`
+    <div class="entry-card rx-card">
+      <div class="card-top">
+        <div class="card-title">👩‍⚕️ ${esc(p.doctor)}</div>
+        <div class="card-actions">
+          <button class="btn btn-edit btn-sm" onclick="openModal('prescriptions','${p.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteEntry('prescriptions','${p.id}')">🗑️</button>
+        </div>
+      </div>
+      <div class="card-meta">
+        ${p.speciality?`<div class="card-meta-row"><span class="badge badge-active">${esc(p.speciality)}</span></div>`:''}
+        ${p.clinic?`<div class="card-meta-row">🏥 <strong>${esc(p.clinic)}</strong></div>`:''}
+        <div class="card-meta-row">📅 ${fmtDate(p.date)}</div>
+        ${p.diagnosis?`<div class="card-meta-row">🔍 ${esc(p.diagnosis)}</div>`:''}
+      </div>
+      ${p.medicines?`<div class="card-notes"><span style="font-style:normal;font-weight:700;color:var(--text-mid);">💊 </span>${esc(p.medicines)}</div>`:''}
+      ${p.notes?`<div class="card-notes">${esc(p.notes)}</div>`:''}
+      ${attachChips(p.id)}
+    </div>`).join('');
+}
+
+// ───────────────────────────────────────────────
+// RENDER SUMMARY
+// ───────────────────────────────────────────────
+function renderSummary(){
+  const tests=load('tests'),meds=load('medicines'),bills=load('bills'),expenses=load('expenses'),rxs=load('prescriptions');
+  const totalBills=bills.reduce((s,x)=>s+(x.amount||0),0);
+  const totalExp=expenses.reduce((s,x)=>s+(x.amount||0),0);
+  const activeMeds=meds.filter(isActive);
+  const posTests=tests.filter(x=>x.result==='Positive').length;
+  const fmap=loadFiles();
+  const totalFiles=Object.values(fmap).reduce((s,v)=>s+Object.values(v).reduce((ss,a)=>ss+(Array.isArray(a)?a.length:0),0),0);
+
+  document.getElementById('summary-stats').innerHTML=`
+    <div class="stat-card c-pink"><div class="stat-label">Medical Bills</div><div class="stat-value">${fmt(totalBills)}</div><div class="stat-sub">${bills.length} bill${bills.length!==1?'s':''} recorded</div></div>
+    <div class="stat-card c-mauve"><div class="stat-label">Other Expenses</div><div class="stat-value">${fmt(totalExp)}</div><div class="stat-sub">${expenses.length} item${expenses.length!==1?'s':''} recorded</div></div>
+    <div class="stat-card c-gold"><div class="stat-label">Grand Total</div><div class="stat-value">${fmt(totalBills+totalExp)}</div><div class="stat-sub">All spending</div></div>
+    <div class="stat-card c-sage"><div class="stat-label">Active Medicines</div><div class="stat-value">${activeMeds.length}</div><div class="stat-sub">${posTests} positive test${posTests!==1?'s':''}</div></div>
+    <div class="stat-card c-lav"><div class="stat-label">Prescriptions</div><div class="stat-value">${rxs.length}</div><div class="stat-sub">${totalFiles} doc${totalFiles!==1?'s':''} uploaded</div></div>
+  `;
+
+  const noData=type=>`<div style="color:var(--text-light);font-size:0.85rem;font-style:italic;padding:8px 0;">No ${type} recorded yet.</div>`;
+
+  document.getElementById('summary-tests').innerHTML=tests.slice(0,3).length
+    ?tests.slice(0,3).map(t=>`<div class="mini-item"><div class="mini-item-left"><div class="mini-item-name">${esc(t.name)}</div><div class="mini-item-sub">${fmtDate(t.date)}${t.doctor?' · '+esc(t.doctor):''}</div></div>${resultBadge(t.result)}</div>`).join('')
+    :noData('tests');
+
+  document.getElementById('summary-meds').innerHTML=activeMeds.length
+    ?activeMeds.slice(0,4).map(m=>`<div class="mini-item"><div class="mini-item-left"><div class="mini-item-name">${esc(m.name)}</div><div class="mini-item-sub">${esc(m.dosage||'')} · ${esc(m.frequency||'')}</div></div><span class="badge badge-active">Active</span></div>`).join('')
+    :noData('medicines');
+
+  document.getElementById('summary-bills').innerHTML=bills.slice(0,3).length
+    ?bills.slice(0,3).map(b=>`<div class="mini-item"><div class="mini-item-left"><div class="mini-item-name">${esc(b.description)}</div><div class="mini-item-sub">${esc(b.hospital||'')} · ${fmtDate(b.date)}</div></div><span class="amount">${fmt(b.amount)}</span></div>`).join('')
+    :noData('bills');
+
+  document.getElementById('summary-rxs').innerHTML=rxs.slice(0,3).length
+    ?rxs.slice(0,3).map(p=>`<div class="mini-item"><div class="mini-item-left"><div class="mini-item-name">👩‍⚕️ ${esc(p.doctor)}</div><div class="mini-item-sub">${esc(p.clinic||'')}${p.date?' · '+fmtDate(p.date):''}</div></div><span class="badge" style="background:var(--lavender);color:#5b3db0;">Rx</span></div>`).join('')
+    :noData('prescriptions');
+}
+
+// ───────────────────────────────────────────────
+// CSV EXPORT
+// ───────────────────────────────────────────────
+const CSV_H={
+  tests:['Name','Date','Result','Doctor','Notes'],
+  medicines:['Name','Dosage','Frequency','Doctor','Start','End','Notes'],
+  bills:['Date','Hospital','Description','Amount','Status','Notes'],
+  expenses:['Item','Category','Date','Amount','Notes']
+};
+function getRow(type,item){
+  if(type==='tests') return[item.name,item.date,item.result,item.doctor,item.notes];
+  if(type==='medicines') return[item.name,item.dosage,item.frequency,item.doctor,item.start,item.end,item.notes];
+  if(type==='bills') return[item.date,item.hospital,item.description,item.amount,item.status,item.notes];
+  if(type==='expenses') return[item.item,item.category,item.date,item.amount,item.notes];
+}
+function exportCSV(type){
+  const items=load(type);
+  const rows=[CSV_H[type],...items.map(i=>getRow(type,i))];
+  const csv=rows.map(r=>r.map(c=>'"'+String(c||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download=`kanika_${type}_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+// ───────────────────────────────────────────────
+// BOOT
+// ───────────────────────────────────────────────
+function renderAll(){ renderSummary();renderTests();renderMedicines();renderBills();renderExpenses();renderPrescriptions(); }
+renderAll();
+</script>
+</body>
+</html>
